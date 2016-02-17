@@ -88,6 +88,12 @@ namespace Niuware.MSBandViewer
         /// <param name="e">Details about the suspend request.</param>
         private void OnSuspending(object sender, SuspendingEventArgs e)
         {
+            // Unsuscribe all sensors
+            if (AppShell.Current.AppFrame.Content.GetType() == typeof(LandingView))
+            {
+                (AppShell.Current.AppFrame.Content as LandingView).UnsuscribeAllSensors();
+            }
+
             var deferral = e.SuspendingOperation.GetDeferral();
             //TODO: Save application state and stop any background activity
             deferral.Complete();
