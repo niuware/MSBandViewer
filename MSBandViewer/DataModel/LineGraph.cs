@@ -1,77 +1,98 @@
-﻿using Windows.UI.Xaml.Controls;
+﻿using System;
+using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Shapes;
 using Windows.UI.Xaml.Media;
-using Windows.UI;
-using System;
 
 namespace Niuware.MSBandViewer.DataModel
 {
-    class LineGraphPoint
-    {
-        public double X { get; set; }
-        public double Y { get; set; }
-
-        public LineGraphPoint()
-        {
-            X = Y = 0.0;
-        }
-
-        public void ResetX()
-        {
-            X = 0.0;
-        }
-
-        public void ResetY()
-        {
-            Y = 0.0;
-        }
-    }
-
     public class LineGraph
     {
-        LineGraphPoint linePoint = new LineGraphPoint();
+        VectorData2D<double> linePoint;
 
-        double xOffset = 0.0;
         double yOffset = 0.0;
         double yOrigin = 0.0;
+        double xScale = 10.0;
+        double yScale = 1.0;
 
         Canvas targetCanvas;
         SolidColorBrush lineBrush;
 
-        public LineGraph(ref Canvas canvas, SolidColorBrush brush, double xoffset = 0.0, double yoffset = 0.0)
+        /// <summary>
+        /// Creates a new line graph value
+        /// </summary>
+        /// <param name="canvas">Canvas where the line graph is drawn</param>
+        /// <param name="brush">Brush of the line</param>
+        /// <param name="yoffset">The graph will start at the middle height of the canvas plus this offset</param>
+        /// <param name="xscale">The graph X scale</param>
+        /// <param name="yscale">The graph Y scale</param>
+        public LineGraph(ref Canvas canvas, SolidColorBrush brush, double yoffset = 0.0, double xscale = 10.0, double yscale = 1.0)
         {
             targetCanvas = canvas;
             lineBrush = brush;
-            xOffset = xoffset;
             yOffset = yoffset;
+            xScale = xscale;
+            yScale = yscale;
         }
 
-        public void SetXOffset(double value)
+        public double XScale
         {
-            xOffset = value;
+            get { return xScale; } 
+            set { xScale = value; }
         }
 
-        public void SetYOffset(double value)
+        public double YScale
         {
-            yOffset+= value;
+            get { return yScale; }
+            set { yScale = value; }
         }
 
+        public double YOffset
+        {
+            get
+            {
+                return yOffset;
+            }
+            set
+            {
+                yOffset = value;
+            }
+        }
+
+        public double YOrigin
+        {
+            get
+            {
+                return yOrigin;
+            }
+            set
+            {
+                yOrigin = value;
+            }
+        }
+
+        /// <summary>
+        /// Adds a new line to the graph, well to the canvas
+        /// </summary>
+        /// <param name="value">The y value for the new line</param>
         public void UpdateGraph(double value)
         {
             Line li = new Line();
             li.Stroke = lineBrush;
             li.StrokeThickness = 2.0;
 
+            // If the X axis has reached the limit, clear all lines and start from X = 0
             if (linePoint.X >= targetCanvas.ActualWidth)
             {
                 linePoint.X = 0;
                 targetCanvas.Children.Clear();
             }
 
+            value *= yScale;
+
             li.X1 = linePoint.X;
             li.Y1 = linePoint.Y + yOffset + yOrigin;
 
-            linePoint.X += xOffset;
+            linePoint.X += xScale;
 
             li.X2 = linePoint.X;
 
@@ -87,6 +108,9 @@ namespace Niuware.MSBandViewer.DataModel
             targetCanvas.Children.Add(li);
         }
 
+        /// <summary>
+        /// If window is resized, change the origin of the graph
+        /// </summary>
         public void SizeChanged()
         {
             yOrigin = targetCanvas.ActualHeight / 2.0;

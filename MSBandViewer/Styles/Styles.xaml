@@ -108,6 +108,13 @@
         <Setter Property="Padding" Value="0"/>
     </Style>
 
+    <Style x:Key="GraphDetailStackPanelStyle" TargetType="StackPanel">
+        <Setter Property="Background" Value="{StaticResource GraphDetailStackPanelBackgroundBrush}" />
+        <Setter Property="Padding" Value="10" />
+        <Setter Property="Width" Value="300" />
+        <Setter Property="Height" Value="140" />
+    </Style>
+
     <ControlTemplate x:Key="SplitViewPaneMenuButtonTemplate" TargetType="Button">
         <Grid MinWidth="48" Height="48" HorizontalAlignment="Center" VerticalAlignment="Center">
             <Border Background="{ThemeResource SystemControlBackgroundBaseLowBrush}" />
@@ -127,5 +134,7 @@
             </ContentPresenter>
         </Grid>
     </ControlTemplate>
+
+    <SolidColorBrush x:Key="GraphDetailStackPanelBackgroundBrush" Color="Black" Opacity="0.7"></SolidColorBrush>
 
 </ResourceDictionary>

@@ -138,7 +138,7 @@
                             <Line Grid.Row="2" Stretch="Fill" Stroke="{ThemeResource SystemControlHighlightListLowBrush}" StrokeThickness="1" X1="0" X2="{Binding ActualWidth, ElementName=accelerometerGraphCanvas}" />
                         </Grid>
                         <Canvas x:Name="accelerometerGraphCanvas" />
-                        <StackPanel Width="300" Height="140" HorizontalAlignment="Left" VerticalAlignment="Bottom">
+                        <StackPanel HorizontalAlignment="Left" VerticalAlignment="Bottom" Style="{StaticResource GraphDetailStackPanelStyle}" Margin="0 0 0 40">
                             <TextBlock FontSize="24" Margin="0 0 0 10">Accelerometer</TextBlock>
                             <TextBlock x:Name="accelerometerValueX" Foreground="White"></TextBlock>
                             <TextBlock x:Name="accelerometerValueY" Foreground="{ThemeResource SystemControlHighlightAccentBrush}"></TextBlock>
@@ -157,7 +157,7 @@
                             <Line Grid.Row="2" Stretch="Fill" Stroke="{ThemeResource SystemControlHighlightListLowBrush}" StrokeThickness="1" X1="0" X2="{Binding ActualWidth, ElementName=gyroscopeGraphCanvas}" />
                         </Grid>
                         <Canvas x:Name="gyroscopeGraphCanvas" />
-                        <StackPanel Width="300" Height="140" HorizontalAlignment="Left" VerticalAlignment="Bottom">
+                        <StackPanel HorizontalAlignment="Left" VerticalAlignment="Bottom" Style="{StaticResource GraphDetailStackPanelStyle}" Margin="0 0 0 40">
                             <TextBlock FontSize="24" Margin="0 0 0 10">Gyroscope (angular vel.)</TextBlock>
                             <TextBlock x:Name="gyroscopeValueX" Foreground="White"></TextBlock>
                             <TextBlock x:Name="gyroscopeValueY" Foreground="{ThemeResource SystemControlHighlightAccentBrush}"></TextBlock>

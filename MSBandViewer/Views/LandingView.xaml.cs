@@ -12,13 +12,8 @@ using System.Collections.Generic;
 using Windows.Storage;
 using Windows.UI.Xaml.Input;
 
-// The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
-
 namespace Niuware.MSBandViewer.Views
 {
-    /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
     public sealed partial class LandingView : Page
     {
         IBandInfo[] pairedBands;
@@ -31,7 +26,7 @@ namespace Niuware.MSBandViewer.Views
         List<LineGraph> accelerometerLineGraph;
         List<LineGraph> gyroscopeLineGraph;
 
-        List<SensorValue> gyroscopeXValues;
+        List<VectorDataTime3D<double>> gyroscopeData;
 
         public LandingView()
         {
@@ -46,19 +41,19 @@ namespace Niuware.MSBandViewer.Views
 
             accelerometerLineGraph = new List<LineGraph>()
             {
-                new LineGraph(ref accelerometerGraphCanvas, new SolidColorBrush(Windows.UI.Colors.White), 10.0),
-                new LineGraph(ref accelerometerGraphCanvas, (SolidColorBrush)Resources["SystemControlHighlightAccentBrush"], 10.0, -10.0),
-                new LineGraph(ref accelerometerGraphCanvas, new SolidColorBrush(Windows.UI.Colors.Gray), 10.0, 10.0)
+                new LineGraph(ref accelerometerGraphCanvas, new SolidColorBrush(Windows.UI.Colors.White), 0.0, 10.0, 2.5),
+                new LineGraph(ref accelerometerGraphCanvas, (SolidColorBrush)Resources["SystemControlHighlightAccentBrush"], -10.0, 10.0, 2.5),
+                new LineGraph(ref accelerometerGraphCanvas, new SolidColorBrush(Windows.UI.Colors.Gray), 10.0, 10.0, 2.5)
             };
 
             gyroscopeLineGraph = new List<LineGraph>()
             {
-                new LineGraph(ref gyroscopeGraphCanvas, new SolidColorBrush(Windows.UI.Colors.White), 10.0),
-                new LineGraph(ref gyroscopeGraphCanvas, (SolidColorBrush)Resources["SystemControlHighlightAccentBrush"], 10.0, -10.0),
-                new LineGraph(ref gyroscopeGraphCanvas, new SolidColorBrush(Windows.UI.Colors.Gray), 10.0, 10.0)
+                new LineGraph(ref gyroscopeGraphCanvas, new SolidColorBrush(Windows.UI.Colors.White), 0.0, 10.0, 0.15),
+                new LineGraph(ref gyroscopeGraphCanvas, (SolidColorBrush)Resources["SystemControlHighlightAccentBrush"], -10.0, 10.0, 0.15),
+                new LineGraph(ref gyroscopeGraphCanvas, new SolidColorBrush(Windows.UI.Colors.Gray), 10.0, 10.0, 0.15)
             };
 
-            gyroscopeXValues = new List<SensorValue>();
+            gyroscopeData = new List<VectorDataTime3D<double>>();
         }
 
         private async void Timer_Tick(object sender, object e)
@@ -127,6 +122,8 @@ namespace Niuware.MSBandViewer.Views
             syncGrid.Visibility = Visibility.Collapsed;
             commandBar.IsEnabled = true;
         }
+
+        #region Sensor Suscribing
 
         private async void SuscribeContactSensor()
         {
@@ -227,7 +224,6 @@ namespace Niuware.MSBandViewer.Views
                     gyroscopeGraphCanvas.Children.Clear();
                     accelerometerGraphCanvas.Children.Clear();
 
-                    //syncGrid.Visibility = Visibility.Visible;
                     SetSyncMessage("Waiting for band user...");
                 });
             }
@@ -291,9 +287,9 @@ namespace Niuware.MSBandViewer.Views
 
             await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
             {
-                accelerometerValueX.Text = String.Format("X : {0:0.####}", accelerometerRead.AccelerationX);
-                accelerometerValueY.Text = String.Format("Y : {0:0.####}", accelerometerRead.AccelerationY);
-                accelerometerValueZ.Text = String.Format("Z : {0:0.####}", accelerometerRead.AccelerationZ);
+                accelerometerValueX.Text = String.Format("X : {0:0.###}", accelerometerRead.AccelerationX);
+                accelerometerValueY.Text = String.Format("Y : {0:0.###}", accelerometerRead.AccelerationY);
+                accelerometerValueZ.Text = String.Format("Z : {0:0.###}", accelerometerRead.AccelerationZ);
 
                 accelerometerLineGraph[0].UpdateGraph(accelerometerRead.AccelerationX);
                 accelerometerLineGraph[1].UpdateGraph(accelerometerRead.AccelerationY);
@@ -305,13 +301,19 @@ namespace Niuware.MSBandViewer.Views
         {
             IBandGyroscopeReading gyroscropeRead = e.SensorReading;
 
-            gyroscopeXValues.Add(new SensorValue { Timestamp = DateTime.Now, Value = gyroscropeRead.AngularVelocityX });
+            gyroscopeData.Add(new VectorDataTime3D<double>
+            {
+                Timestamp = DateTime.Now,
+                X = gyroscropeRead.AngularVelocityX,
+                Y = gyroscropeRead.AngularVelocityY,
+                Z = gyroscropeRead.AngularVelocityZ
+            });
 
             await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
             {
-                gyroscopeValueX.Text = String.Format("X : {0:0.####}", gyroscropeRead.AngularVelocityX);
-                gyroscopeValueY.Text = String.Format("Y : {0:0.####}", gyroscropeRead.AngularVelocityY);
-                gyroscopeValueZ.Text = String.Format("Z : {0:0.####}", gyroscropeRead.AngularVelocityZ);
+                gyroscopeValueX.Text = String.Format("X : {0:0.###}", gyroscropeRead.AngularVelocityX);
+                gyroscopeValueY.Text = String.Format("Y : {0:0.###}", gyroscropeRead.AngularVelocityY);
+                gyroscopeValueZ.Text = String.Format("Z : {0:0.###}", gyroscropeRead.AngularVelocityZ);
 
                 gyroscopeLineGraph[0].UpdateGraph(gyroscropeRead.AngularVelocityX);
                 gyroscopeLineGraph[1].UpdateGraph(gyroscropeRead.AngularVelocityY);
@@ -319,10 +321,41 @@ namespace Niuware.MSBandViewer.Views
             });
         }
 
+        #endregion
+
+        public void UnsuscribeAllSensors(bool unsuscribeContact = false)
+        {
+            if (bandClient != null)
+            {
+                bandClient.SensorManager.HeartRate.ReadingChanged -= HeartRate_ReadingChanged;
+                bandClient.SensorManager.HeartRate.StopReadingsAsync();
+
+                bandClient.SensorManager.RRInterval.ReadingChanged -= RRInterval_ReadingChanged;
+                bandClient.SensorManager.RRInterval.StopReadingsAsync();
+
+                bandClient.SensorManager.SkinTemperature.ReadingChanged -= SkinTemperature_ReadingChanged;
+                bandClient.SensorManager.SkinTemperature.StopReadingsAsync();
+
+                bandClient.SensorManager.Gsr.ReadingChanged -= Gsr_ReadingChanged;
+                bandClient.SensorManager.Gsr.StopReadingsAsync();
+
+                bandClient.SensorManager.Accelerometer.ReadingChanged -= Accelerometer_ReadingChanged;
+                bandClient.SensorManager.Accelerometer.StopReadingsAsync();
+
+                bandClient.SensorManager.Gyroscope.ReadingChanged -= Gyroscope_ReadingChanged;
+                bandClient.SensorManager.Gyroscope.StopReadingsAsync();
+
+                if (unsuscribeContact)
+                {
+                    bandClient.SensorManager.Contact.ReadingChanged -= Contact_ReadingChanged;
+                    bandClient.SensorManager.Contact.StopReadingsAsync();
+                }
+            }
+        }
+
         private async void SyncBand()
         {
             MessageDialog msgDlg = new MessageDialog("");
-            //syncGrid.Visibility =
             syncStackPanel.Visibility = Visibility.Visible;
             commandBar.IsEnabled = false;
 
@@ -400,39 +433,8 @@ namespace Niuware.MSBandViewer.Views
             SyncBand();
         }
 
-        public void UnsuscribeAllSensors(bool unsuscribeContact = false)
-        {
-            if (bandClient != null)
-            {
-                bandClient.SensorManager.HeartRate.ReadingChanged -= HeartRate_ReadingChanged;
-                bandClient.SensorManager.HeartRate.StopReadingsAsync();
-
-                bandClient.SensorManager.RRInterval.ReadingChanged -= RRInterval_ReadingChanged;
-                bandClient.SensorManager.RRInterval.StopReadingsAsync();
-
-                bandClient.SensorManager.SkinTemperature.ReadingChanged -= SkinTemperature_ReadingChanged;
-                bandClient.SensorManager.SkinTemperature.StopReadingsAsync();
-
-                bandClient.SensorManager.Gsr.ReadingChanged -= Gsr_ReadingChanged;
-                bandClient.SensorManager.Gsr.StopReadingsAsync();
-
-                bandClient.SensorManager.Accelerometer.ReadingChanged -= Accelerometer_ReadingChanged;
-                bandClient.SensorManager.Accelerometer.StopReadingsAsync();
-
-                bandClient.SensorManager.Gyroscope.ReadingChanged -= Gyroscope_ReadingChanged;
-                bandClient.SensorManager.Gyroscope.StopReadingsAsync();
-
-                if (unsuscribeContact)
-                {
-                    bandClient.SensorManager.Contact.ReadingChanged -= Contact_ReadingChanged;
-                    bandClient.SensorManager.Contact.StopReadingsAsync();
-                }
-            }
-        }
-
         private async void saveSessionButton_Click(object sender, RoutedEventArgs e)
         {
-            //syncGrid.Visibility = Visibility.Visible;
             SetSyncMessage("Saving session data...");
 
             UnsuscribeAllSensors();
@@ -441,9 +443,9 @@ namespace Niuware.MSBandViewer.Views
 
             try
             {
-                StorageFile sampleFile = await storageFolder.CreateFileAsync("gyrox.csv", CreationCollisionOption.GenerateUniqueName);
+                StorageFile sampleFile = await storageFolder.CreateFileAsync("msbv-session-data" + DateTime.Now.ToString("ddMMyy-HHmm") + ".csv", CreationCollisionOption.GenerateUniqueName);
 
-                foreach (SensorValue sv in gyroscopeXValues)
+                foreach (VectorDataTime3D<double> sv in gyroscopeData)
                 {
                     await FileIO.AppendTextAsync(sampleFile, sv.ToString() + "\n");
                 }

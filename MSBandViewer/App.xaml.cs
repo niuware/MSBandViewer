@@ -6,6 +6,11 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 using Niuware.MSBandViewer.Views;
 
+/// <summary>
+/// This software was coded by Erik Lopez
+/// erik@niuware.com
+/// </summary>
+
 namespace Niuware.MSBandViewer
 {
     /// <summary>
