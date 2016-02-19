@@ -103,6 +103,7 @@
     <Compile Include="DataModel\VectorData.cs" />
     <Compile Include="NavMenuItem.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Sensor\SensorData.cs" />
     <Compile Include="Views\LandingView.xaml.cs">
       <DependentUpon>LandingView.xaml</DependentUpon>
     </Compile>

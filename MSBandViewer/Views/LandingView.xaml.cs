@@ -8,6 +8,7 @@ using Microsoft.Band.Personalization;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 using Niuware.MSBandViewer.DataModel;
+using Niuware.MSBandViewer.Sensor;
 using System.Collections.Generic;
 using Windows.Storage;
 
@@ -27,12 +28,8 @@ namespace Niuware.MSBandViewer.Views
         List<LineGraph> accelerometerLineGraph;
         List<LineGraph> gyroscopeLineGraph;
 
-        List<VectorDataTime3D<double>> gyroscopeData;
-        List<int> heartRateData;
-
         Dictionary<DateTime, SensorData> sensorData;
         SensorData currentSensorData;
-        DateTime currentTime;
 
         public LandingView()
         {
@@ -59,8 +56,8 @@ namespace Niuware.MSBandViewer.Views
                 new LineGraph(ref gyroscopeGraphCanvas, new SolidColorBrush(Windows.UI.Colors.Gray), 10.0, 10.0, 0.15)
             };
 
-            gyroscopeData = new List<VectorDataTime3D<double>>();
             sensorData = new Dictionary<DateTime, SensorData>();
+            currentSensorData = new SensorData();
         }
 
         private async void Timer_Tick(object sender, object e)
@@ -381,14 +378,6 @@ namespace Niuware.MSBandViewer.Views
         {
             IBandGyroscopeReading gyroscropeRead = e.SensorReading;
 
-            gyroscopeData.Add(new VectorDataTime3D<double>
-            {
-                Timestamp = DateTime.Now,
-                X = gyroscropeRead.AngularVelocityX,
-                Y = gyroscropeRead.AngularVelocityY,
-                Z = gyroscropeRead.AngularVelocityZ
-            });
-
             AppendSensorDataValue(SensorType.GYROSCOPE, new VectorData3D<double>()
             {
                 X = gyroscropeRead.AngularVelocityX,
@@ -440,13 +429,9 @@ namespace Niuware.MSBandViewer.Views
 
         public void AppendSensorDataValue<T>(SensorType type, T value)
         {
-            //DateTime nextTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute, DateTime.Now.Second);
-
-            bool waitForSensors = false;
-
             if (!currentSensorData.IsEmpty())
             {
-                currentTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute, DateTime.Now.Second);
+                DateTime currentTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute, DateTime.Now.Second);
 
                 if (!sensorData.ContainsKey(currentTime))
                 {
@@ -455,30 +440,6 @@ namespace Niuware.MSBandViewer.Views
 
                 currentSensorData = new SensorData();
             }
-
-            //if (currentTime != nextTime)
-            //{
-            //    if (!waitForSensors)
-            //    {
-            //        currentSensorData = new SensorData();
-            //        currentTime = nextTime;
-            //    }
-
-            //    if (currentTime == default(DateTime))
-            //    {
-            //        currentTime = nextTime;
-            //    }
-            //}
-            //else
-            //{
-            //    if (!sensorData.ContainsKey(currentTime))
-            //    {
-            //        sensorData.Add(currentTime, currentSensorData);
-            //    }
-
-            //    currentSensorData = new SensorData();
-            //    currentTime = nextTime;
-            //}
 
             switch (type)
             {

@@ -74,7 +74,7 @@
                                         </Storyboard>
                                     </Grid.Resources>
                                     <Canvas x:Name="heartRateCanvas" Height="60" Width="60">
-                                        <Path x:Name="heartRatePath" Fill="White" Stroke="White" StrokeThickness="1"
+                                        <Path x:Name="heartRatePath" Fill="Transparent" Stroke="White" StrokeThickness="1"
                                                 Data="M 241,200 
                                                       A 20,20 0 0 0 200,240
                                                       C 210,250 240,270 240,270
