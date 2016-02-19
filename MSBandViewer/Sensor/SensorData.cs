@@ -14,18 +14,23 @@ namespace Niuware.MSBandViewer.Sensor
     class SensorData
     {
         public VectorData3D<double> gyroscopeAngVel;
-        public int heartRateBpm;
+        public VectorData3D<double> accelerometer;
+        public int heartRate;
+        public bool contact;
+        public double rrInterval;
+        public int gsr;
+        public double temperature;
 
         public SensorData() { }
 
         public override string ToString()
         {
-            return heartRateBpm.ToString() + "," + gyroscopeAngVel.X + "," + gyroscopeAngVel.Y + "," + gyroscopeAngVel.Z;
+            return heartRate.ToString() + "," + gyroscopeAngVel.X + "," + gyroscopeAngVel.Y + "," + gyroscopeAngVel.Z;
         }
 
         public bool IsEmpty()
         {
-            if (heartRateBpm == 0)
+            if (heartRate == 0)
                 return true;
 
             if (gyroscopeAngVel.X == 0.0 && gyroscopeAngVel.Y == 0.0 && gyroscopeAngVel.Z == 0.0)

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Popups;
 using Windows.UI.Xaml.Controls;
@@ -16,20 +17,22 @@ namespace Niuware.MSBandViewer.Views
 {
     public sealed partial class LandingView : Page
     {
-        IBandInfo[] pairedBands;
-        IBandClient bandClient;
+        //IBandInfo[] pairedBands;
+        //IBandClient bandClient;
         bool msBandUserConsent;
         bool msBandUserContact;
 
         int maxHeartBpm, minHeartBpm = 250;
 
-        DispatcherTimer timer;
+        DispatcherTimer timer, sensorTimer;
 
         List<LineGraph> accelerometerLineGraph;
         List<LineGraph> gyroscopeLineGraph;
 
         Dictionary<DateTime, SensorData> sensorData;
         SensorData currentSensorData;
+
+        Band band;
 
         public LandingView()
         {
@@ -38,6 +41,11 @@ namespace Niuware.MSBandViewer.Views
             timer = new DispatcherTimer();
             timer.Interval = new TimeSpan(0, 0, 1);
             timer.Tick += Timer_Tick;
+            timer.Start();
+
+            sensorTimer = new DispatcherTimer();
+            sensorTimer.Interval = new TimeSpan(0, 0, 0, 0, 10);
+            sensorTimer.Tick += SensorTimer_Tick;
 
             heartRateStoryboard.Begin();
             heartRateStoryboard.Pause();
@@ -58,6 +66,71 @@ namespace Niuware.MSBandViewer.Views
 
             sensorData = new Dictionary<DateTime, SensorData>();
             currentSensorData = new SensorData();
+
+            band = new Band();
+        }
+
+        private async void SensorTimer_Tick(object sender, object e)
+        {
+            maxHeartBpm = (band.Data.heartRate > maxHeartBpm) ? band.Data.heartRate : maxHeartBpm;
+            minHeartBpm = (minHeartBpm < band.Data.heartRate) ? minHeartBpm : band.Data.heartRate;
+
+            //if (heartRateRead.Quality == HeartRateQuality.Locked)
+            //{
+            //    AppendSensorDataValue(SensorType.HEARTRATE, heartRateRead.HeartRate);
+            //}
+
+            await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            {
+                heartRateBpmTextBlock.Text = band.Data.heartRate.ToString();
+                heartRateStatusTextBlock.Text = band.HeartRateLocked.ToString();
+                heartRateMaxBpmTextBlock.Text = maxHeartBpm.ToString();
+                heartRateMinBpmTextBlock.Text = minHeartBpm.ToString();
+
+                if (band.HeartRateLocked == HeartRateQuality.Locked)
+                {
+                    heartRateStoryboard.Resume();
+                    heartRatePath.Fill = new SolidColorBrush(Windows.UI.Colors.White);
+
+                    // Update heart beat animation according to the real heart rate
+                    heartRateStoryboard.SpeedRatio = Math.Round((band.Data.heartRate / 65.0), 2);
+                }
+                else
+                {
+                    heartRatePath.Fill = new SolidColorBrush(Windows.UI.Colors.Transparent);
+                    heartRateBpmTextBlock.Text = "--";
+                    heartRateStoryboard.Pause();
+                }
+
+                heartRateRRTextblock.Text = band.Data.rrInterval.ToString();
+
+                skinTemperatureTextBlock.Text = String.Format("{0:0.#}", band.Data.temperature);
+
+                gsrTextBlock.Text = String.Format("{0,-10:0.##}", ((double)band.Data.gsr / 1000.0));
+
+                accelerometerValueX.Text = String.Format("X : {0:0.###}", band.Data.accelerometer.X);
+                accelerometerValueY.Text = String.Format("Y : {0:0.###}", band.Data.accelerometer.Y);
+                accelerometerValueZ.Text = String.Format("Z : {0:0.###}", band.Data.accelerometer.Z);
+
+                accelerometerLineGraph[0].UpdateGraph(band.Data.accelerometer.X);
+                accelerometerLineGraph[1].UpdateGraph(band.Data.accelerometer.Y);
+                accelerometerLineGraph[2].UpdateGraph(band.Data.accelerometer.Z);
+
+                gyroscopeValueX.Text = String.Format("X : {0:0.###}", band.Data.gyroscopeAngVel.X);
+                gyroscopeValueY.Text = String.Format("Y : {0:0.###}", band.Data.gyroscopeAngVel.Y);
+                gyroscopeValueZ.Text = String.Format("Z : {0:0.###}", band.Data.gyroscopeAngVel.Z);
+
+                gyroscopeLineGraph[0].UpdateGraph(band.Data.gyroscopeAngVel.X);
+                gyroscopeLineGraph[1].UpdateGraph(band.Data.gyroscopeAngVel.Y);
+                gyroscopeLineGraph[2].UpdateGraph(band.Data.gyroscopeAngVel.Z);
+            });
+
+            DateTime currentTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute, DateTime.Now.Second);
+
+            if (!sensorData.ContainsKey(currentTime))
+            {
+                sensorData.Add(currentTime, band.Data);
+            }
         }
 
         private async void Timer_Tick(object sender, object e)
@@ -67,7 +140,7 @@ namespace Niuware.MSBandViewer.Views
             await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { msBandDayNumberTextBlock.Text = DateTime.Now.ToString("dd"); });
         }
 
-        private void StartBandClock()
+        private async Task StartBandClock()
         {
             double clockOffset = 0;
 
@@ -76,47 +149,58 @@ namespace Niuware.MSBandViewer.Views
                 clockOffset = 16;
             }
 
-            msBandDayStringTextBlock.Margin = new Thickness(msBandDayStringTextBlock.Margin.Left + clockOffset, 100, 0, 0);
-            msBandDayNumberTextBlock.Margin = new Thickness(msBandDayNumberTextBlock.Margin.Left + clockOffset, 112, 0, 0);
+            //timer.Start();
 
-            timer.Start();
+            await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            {
+                msBandDayStringTextBlock.Margin = new Thickness(msBandDayStringTextBlock.Margin.Left + clockOffset, 100, 0, 0);
+                msBandDayNumberTextBlock.Margin = new Thickness(msBandDayNumberTextBlock.Margin.Left + clockOffset, 112, 0, 0);
+            });
         }
 
         private async void StartDashboard()
         {
             SetSyncMessage("Preparing the dashboard...");
 
-            // Unsuscribe all sensors for possible previous unterminated connections
-            UnsuscribeAllSensors();
+            band.UnsuscribeSensors();
+            await band.SuscribeSensors();
 
-            // Contact sensor
-            SuscribeContactSensor();
+            //// Unsuscribe all sensors for possible previous unterminated connections
+            //UnsuscribeAllSensors();
 
-            //Heart rate sensor
-            SuscribeHeartRateSensor();
+            //// Contact sensor
+            //SuscribeContactSensor();
 
-            // RR Interval
-            SuscribeRRInterval();
+            ////Heart rate sensor
+            //SuscribeHeartRateSensor();
 
-            // GSR
-            SuscribeGSRSensor();
+            //// RR Interval
+            //SuscribeRRInterval();
 
-            // Skin temperature
-            SuscribeSkinTemperatureSensor();
+            //// GSR
+            //SuscribeGSRSensor();
 
-            // Accelerometer
-            SuscribeAccelerometerSensor();
+            //// Skin temperature
+            //SuscribeSkinTemperatureSensor();
 
-            // Gyroscope
-            SuscribeGyroscopeSensor();
+            //// Accelerometer
+            //SuscribeAccelerometerSensor();
 
-            // Get band info
-            SuscribeBandInfo();
+            //// Gyroscope
+            //SuscribeGyroscopeSensor();
+
+            //// Get band info
+            //SuscribeBandInfo();
+            var bitmp = new BitmapImage();
+
+            msBandMeTileImage.Source = band.BandScreenImage;
 
             // Start band UI clock
-            StartBandClock();
+            await StartBandClock();
 
-            await bandClient.NotificationManager.VibrateAsync(Microsoft.Band.Notifications.VibrationType.NotificationOneTone);
+            sensorTimer.Start();
+
+            //await bandClient.NotificationManager.VibrateAsync(Microsoft.Band.Notifications.VibrationType.NotificationOneTone);
 
             syncGrid.Visibility = Visibility.Collapsed;
             commandBar.IsEnabled = true;
@@ -132,28 +216,32 @@ namespace Niuware.MSBandViewer.Views
 
             try
             {
-                // Get the list of Microsoft Bands paired to the computer.
-                pairedBands = await BandClientManager.Instance.GetBandsAsync();
+                await band.SyncBand();
 
-                if (pairedBands.Length < 1)
-                {
-                    msgDlg.Content = "You need to pair a Microsoft Band. Go to settings to pair it now.";
-                    msgDlg.Commands.Add(new UICommand("Go to settings", new UICommandInvokedHandler(this.CommandInvokedHandler), 1));
-                }
-                else
-                {
-                    bandClient = await BandClientManager.Instance.ConnectAsync(pairedBands[0]);
-                }
+                //// Get the list of Microsoft Bands paired to the computer.
+                //pairedBands = await BandClientManager.Instance.GetBandsAsync();
+
+                //if (pairedBands.Length < 1)
+                //{
+                //    msgDlg.Content = "You need to pair a Microsoft Band. Go to settings to pair it now.";
+                //    msgDlg.Commands.Add(new UICommand("Go to settings", new UICommandInvokedHandler(this.CommandInvokedHandler), 1));
+                //}
+                //else
+                //{
+                //    bandClient = await BandClientManager.Instance.ConnectAsync(pairedBands[0]);
+                //}
             }
             catch (BandAccessDeniedException)
             {
-                msgDlg.Content = "Make sure your Microsoft Band (" + pairedBands[0].Name + ") has permission to synchorize to this computer and try again.";
+                //msgDlg.Content = "Make sure your Microsoft Band (" + pairedBands[0].Name + ") has permission to synchorize to this computer and try again.";
+                msgDlg.Content = "Make sure your Microsoft Band (" + band.BandName + ") has permission to synchorize to this computer and try again.";
                 msgDlg.Commands.Add(new UICommand("Try Again", new UICommandInvokedHandler(this.CommandInvokedHandler), 0));
                 msgDlg.Commands.Add(new UICommand("Close", new UICommandInvokedHandler(this.CommandInvokedHandler), -1));
             }
             catch (BandIOException)
             {
-                msgDlg.Content = "Failed to connect to your Microsoft Band (" + pairedBands[0].Name + ").";
+                //msgDlg.Content = "Failed to connect to your Microsoft Band (" + pairedBands[0].Name + ").";
+                msgDlg.Content = "Failed to connect to your Microsoft Band (" + band.BandName + ").";
                 msgDlg.Commands.Add(new UICommand("Try Again", new UICommandInvokedHandler(this.CommandInvokedHandler), 0));
                 msgDlg.Commands.Add(new UICommand("Close", new UICommandInvokedHandler(this.CommandInvokedHandler), -1));
             }
@@ -171,7 +259,10 @@ namespace Niuware.MSBandViewer.Views
                 }
                 else
                 {
-                    StartDashboard();
+                    if (band.Status == BandSyncStatus.SYNCED)
+                    {
+                        StartDashboard();
+                    }
                 }
             }
         }
@@ -186,6 +277,7 @@ namespace Niuware.MSBandViewer.Views
             });
         }
 
+        /*
         #region Band Sensor Suscribing and Unsuscribing
 
         private async void SuscribeContactSensor()
@@ -396,37 +488,41 @@ namespace Niuware.MSBandViewer.Views
                 gyroscopeLineGraph[2].UpdateGraph(gyroscropeRead.AngularVelocityZ);
             });
         }
+        */
 
         public void UnsuscribeAllSensors(bool unsuscribeContact = false)
         {
-            if (bandClient != null)
-            {
-                bandClient.SensorManager.HeartRate.ReadingChanged -= HeartRate_ReadingChanged;
-                bandClient.SensorManager.HeartRate.StopReadingsAsync();
+            band.UnsuscribeSensors(unsuscribeContact);
 
-                bandClient.SensorManager.RRInterval.ReadingChanged -= RRInterval_ReadingChanged;
-                bandClient.SensorManager.RRInterval.StopReadingsAsync();
+            //if (bandClient != null)
+            //{
+            //    bandClient.SensorManager.HeartRate.ReadingChanged -= HeartRate_ReadingChanged;
+            //    bandClient.SensorManager.HeartRate.StopReadingsAsync();
 
-                bandClient.SensorManager.SkinTemperature.ReadingChanged -= SkinTemperature_ReadingChanged;
-                bandClient.SensorManager.SkinTemperature.StopReadingsAsync();
+            //    bandClient.SensorManager.RRInterval.ReadingChanged -= RRInterval_ReadingChanged;
+            //    bandClient.SensorManager.RRInterval.StopReadingsAsync();
 
-                bandClient.SensorManager.Gsr.ReadingChanged -= Gsr_ReadingChanged;
-                bandClient.SensorManager.Gsr.StopReadingsAsync();
+            //    bandClient.SensorManager.SkinTemperature.ReadingChanged -= SkinTemperature_ReadingChanged;
+            //    bandClient.SensorManager.SkinTemperature.StopReadingsAsync();
 
-                bandClient.SensorManager.Accelerometer.ReadingChanged -= Accelerometer_ReadingChanged;
-                bandClient.SensorManager.Accelerometer.StopReadingsAsync();
+            //    bandClient.SensorManager.Gsr.ReadingChanged -= Gsr_ReadingChanged;
+            //    bandClient.SensorManager.Gsr.StopReadingsAsync();
 
-                bandClient.SensorManager.Gyroscope.ReadingChanged -= Gyroscope_ReadingChanged;
-                bandClient.SensorManager.Gyroscope.StopReadingsAsync();
+            //    bandClient.SensorManager.Accelerometer.ReadingChanged -= Accelerometer_ReadingChanged;
+            //    bandClient.SensorManager.Accelerometer.StopReadingsAsync();
 
-                if (unsuscribeContact)
-                {
-                    bandClient.SensorManager.Contact.ReadingChanged -= Contact_ReadingChanged;
-                    bandClient.SensorManager.Contact.StopReadingsAsync();
-                }
-            }
+            //    bandClient.SensorManager.Gyroscope.ReadingChanged -= Gyroscope_ReadingChanged;
+            //    bandClient.SensorManager.Gyroscope.StopReadingsAsync();
+
+            //    if (unsuscribeContact)
+            //    {
+            //        bandClient.SensorManager.Contact.ReadingChanged -= Contact_ReadingChanged;
+            //        bandClient.SensorManager.Contact.StopReadingsAsync();
+            //    }
+            //}
         }
 
+        /*
         public void AppendSensorDataValue<T>(SensorType type, T value)
         {
             if (!currentSensorData.IsEmpty())
@@ -455,6 +551,7 @@ namespace Niuware.MSBandViewer.Views
         }
 
         #endregion
+        */
 
         #region Page Commands
 
@@ -507,7 +604,8 @@ namespace Niuware.MSBandViewer.Views
         {
             SetSyncMessage("Saving session data...");
 
-            UnsuscribeAllSensors();
+            //UnsuscribeAllSensors();
+            band.UnsuscribeSensors();
 
             StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
 
