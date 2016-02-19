@@ -10,7 +10,6 @@ using Windows.UI.Xaml.Media.Imaging;
 using Niuware.MSBandViewer.DataModel;
 using System.Collections.Generic;
 using Windows.Storage;
-using Windows.UI.Xaml.Input;
 
 namespace Niuware.MSBandViewer.Views
 {
@@ -21,12 +20,19 @@ namespace Niuware.MSBandViewer.Views
         bool msBandUserConsent;
         bool msBandUserContact;
 
+        int maxHeartBpm, minHeartBpm = 250;
+
         DispatcherTimer timer;
 
         List<LineGraph> accelerometerLineGraph;
         List<LineGraph> gyroscopeLineGraph;
 
         List<VectorDataTime3D<double>> gyroscopeData;
+        List<int> heartRateData;
+
+        Dictionary<DateTime, SensorData> sensorData;
+        SensorData currentSensorData;
+        DateTime currentTime;
 
         public LandingView()
         {
@@ -54,6 +60,7 @@ namespace Niuware.MSBandViewer.Views
             };
 
             gyroscopeData = new List<VectorDataTime3D<double>>();
+            sensorData = new Dictionary<DateTime, SensorData>();
         }
 
         private async void Timer_Tick(object sender, object e)
@@ -61,11 +68,6 @@ namespace Niuware.MSBandViewer.Views
             await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { msBandClockTextBlock.Text = DateTime.Now.ToString("h:mm"); });
             await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { msBandDayStringTextBlock.Text = DateTime.Now.ToString("ddd"); });
             await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { msBandDayNumberTextBlock.Text = DateTime.Now.ToString("dd"); });
-        }
-
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-            AppShell.Current.RemoteCheckTogglePaneButton();
         }
 
         private void StartBandClock()
@@ -123,7 +125,71 @@ namespace Niuware.MSBandViewer.Views
             commandBar.IsEnabled = true;
         }
 
-        #region Sensor Suscribing
+        private async void SyncBand()
+        {
+            MessageDialog msgDlg = new MessageDialog("");
+            syncStackPanel.Visibility = Visibility.Visible;
+            commandBar.IsEnabled = false;
+
+            SetSyncMessage("Connecting to your band...");
+
+            try
+            {
+                // Get the list of Microsoft Bands paired to the computer.
+                pairedBands = await BandClientManager.Instance.GetBandsAsync();
+
+                if (pairedBands.Length < 1)
+                {
+                    msgDlg.Content = "You need to pair a Microsoft Band. Go to settings to pair it now.";
+                    msgDlg.Commands.Add(new UICommand("Go to settings", new UICommandInvokedHandler(this.CommandInvokedHandler), 1));
+                }
+                else
+                {
+                    bandClient = await BandClientManager.Instance.ConnectAsync(pairedBands[0]);
+                }
+            }
+            catch (BandAccessDeniedException)
+            {
+                msgDlg.Content = "Make sure your Microsoft Band (" + pairedBands[0].Name + ") has permission to synchorize to this computer and try again.";
+                msgDlg.Commands.Add(new UICommand("Try Again", new UICommandInvokedHandler(this.CommandInvokedHandler), 0));
+                msgDlg.Commands.Add(new UICommand("Close", new UICommandInvokedHandler(this.CommandInvokedHandler), -1));
+            }
+            catch (BandIOException)
+            {
+                msgDlg.Content = "Failed to connect to your Microsoft Band (" + pairedBands[0].Name + ").";
+                msgDlg.Commands.Add(new UICommand("Try Again", new UICommandInvokedHandler(this.CommandInvokedHandler), 0));
+                msgDlg.Commands.Add(new UICommand("Close", new UICommandInvokedHandler(this.CommandInvokedHandler), -1));
+            }
+            catch (Exception ex)
+            {
+                msgDlg.Content = ex.ToString();
+            }
+            finally
+            {
+                if (msgDlg.Content != "")
+                {
+                    syncStackPanel.Visibility = Visibility.Collapsed;
+
+                    await msgDlg.ShowAsync();
+                }
+                else
+                {
+                    StartDashboard();
+                }
+            }
+        }
+
+        private async void SetSyncMessage(string message, bool progress = true)
+        {
+            await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            {
+                syncProgressRing.IsActive = progress;
+                syncTextBlock.Text = message;
+                syncGrid.Visibility = Visibility.Visible;
+            });
+        }
+
+        #region Band Sensor Suscribing and Unsuscribing
 
         private async void SuscribeContactSensor()
         {
@@ -243,22 +309,36 @@ namespace Niuware.MSBandViewer.Views
         {
             IBandHeartRateReading heartRateRead = e.SensorReading;
 
+            maxHeartBpm = (heartRateRead.HeartRate > maxHeartBpm) ? heartRateRead.HeartRate : maxHeartBpm;
+            minHeartBpm = (minHeartBpm < heartRateRead.HeartRate) ? minHeartBpm : heartRateRead.HeartRate;
+
+            if (heartRateRead.Quality == HeartRateQuality.Locked)
+            {
+                AppendSensorDataValue(SensorType.HEARTRATE, heartRateRead.HeartRate);
+            }
+
             await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => 
             {
                 heartRateBpmTextBlock.Text = heartRateRead.HeartRate.ToString();
                 heartRateStatusTextBlock.Text = heartRateRead.Quality.ToString();
+                heartRateMaxBpmTextBlock.Text = maxHeartBpm.ToString();
+                heartRateMinBpmTextBlock.Text = minHeartBpm.ToString();
 
                 if (heartRateRead.Quality == HeartRateQuality.Locked)
                 {
                     heartRateStoryboard.Resume();
+                    heartRatePath.Fill = new SolidColorBrush(Windows.UI.Colors.White);
+
+                    // Update heart beat animation according to the real heart rate
+                    heartRateStoryboard.SpeedRatio = Math.Round((heartRateRead.HeartRate / 65.0), 2);
                 }
                 else
                 {
+                    heartRatePath.Fill = new SolidColorBrush(Windows.UI.Colors.Transparent);
+                    heartRateBpmTextBlock.Text = "--";
                     heartRateStoryboard.Pause();
                 }
             });
-
-            //heartRateStoryboard.SpeedRatio+= heartRateStoryboard.SpeedRatio*.1;
         }
 
         private async void Gsr_ReadingChanged(object sender, BandSensorReadingEventArgs<IBandGsrReading> e)
@@ -309,6 +389,13 @@ namespace Niuware.MSBandViewer.Views
                 Z = gyroscropeRead.AngularVelocityZ
             });
 
+            AppendSensorDataValue(SensorType.GYROSCOPE, new VectorData3D<double>()
+            {
+                X = gyroscropeRead.AngularVelocityX,
+                Y = gyroscropeRead.AngularVelocityY,
+                Z = gyroscropeRead.AngularVelocityZ
+            });
+
             await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
             {
                 gyroscopeValueX.Text = String.Format("X : {0:0.###}", gyroscropeRead.AngularVelocityX);
@@ -320,8 +407,6 @@ namespace Niuware.MSBandViewer.Views
                 gyroscopeLineGraph[2].UpdateGraph(gyroscropeRead.AngularVelocityZ);
             });
         }
-
-        #endregion
 
         public void UnsuscribeAllSensors(bool unsuscribeContact = false)
         {
@@ -353,59 +438,64 @@ namespace Niuware.MSBandViewer.Views
             }
         }
 
-        private async void SyncBand()
+        public void AppendSensorDataValue<T>(SensorType type, T value)
         {
-            MessageDialog msgDlg = new MessageDialog("");
-            syncStackPanel.Visibility = Visibility.Visible;
-            commandBar.IsEnabled = false;
+            //DateTime nextTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute, DateTime.Now.Second);
 
-            SetSyncMessage("Connecting to your band...");
+            bool waitForSensors = false;
 
-            try
+            if (!currentSensorData.IsEmpty())
             {
-                // Get the list of Microsoft Bands paired to the computer.
-                pairedBands = await BandClientManager.Instance.GetBandsAsync();
+                currentTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute, DateTime.Now.Second);
 
-                if (pairedBands.Length < 1)
+                if (!sensorData.ContainsKey(currentTime))
                 {
-                    msgDlg.Content = "You need to pair a Microsoft Band. Go to settings to pair it now.";
-                    msgDlg.Commands.Add(new UICommand("Go to settings", new UICommandInvokedHandler(this.CommandInvokedHandler), 1));
+                    sensorData.Add(currentTime, currentSensorData);
                 }
-                else
-                {
-                    bandClient = await BandClientManager.Instance.ConnectAsync(pairedBands[0]);
-                }
-            }
-            catch (BandAccessDeniedException)
-            {
-                msgDlg.Content = "Make sure your Microsoft Band (" + pairedBands[0].Name + ") has permission to synchorize to this computer and try again.";
-                msgDlg.Commands.Add(new UICommand("Try Again", new UICommandInvokedHandler(this.CommandInvokedHandler), 0));
-                msgDlg.Commands.Add(new UICommand("Close", new UICommandInvokedHandler(this.CommandInvokedHandler), -1));
-            }
-            catch (BandIOException)
-            {
-                msgDlg.Content = "Failed to connect to your Microsoft Band (" + pairedBands[0].Name + ").";
-                msgDlg.Commands.Add(new UICommand("Try Again", new UICommandInvokedHandler(this.CommandInvokedHandler), 0));
-                msgDlg.Commands.Add(new UICommand("Close", new UICommandInvokedHandler(this.CommandInvokedHandler), -1));
-            }
-            catch (Exception ex)
-            {
-                msgDlg.Content = ex.ToString();
-            }
-            finally
-            {
-                if (msgDlg.Content != "")
-                {
-                    syncStackPanel.Visibility = Visibility.Collapsed;
 
-                    await msgDlg.ShowAsync();
-                }
-                else
-                {
-                    StartDashboard();
-                }
+                currentSensorData = new SensorData();
+            }
+
+            //if (currentTime != nextTime)
+            //{
+            //    if (!waitForSensors)
+            //    {
+            //        currentSensorData = new SensorData();
+            //        currentTime = nextTime;
+            //    }
+
+            //    if (currentTime == default(DateTime))
+            //    {
+            //        currentTime = nextTime;
+            //    }
+            //}
+            //else
+            //{
+            //    if (!sensorData.ContainsKey(currentTime))
+            //    {
+            //        sensorData.Add(currentTime, currentSensorData);
+            //    }
+
+            //    currentSensorData = new SensorData();
+            //    currentTime = nextTime;
+            //}
+
+            switch (type)
+            {
+                case SensorType.HEARTRATE:
+                    currentSensorData.heartRateBpm = Convert.ToInt32(value);
+                    break;
+                case SensorType.GYROSCOPE:
+                    currentSensorData.gyroscopeAngVel = (VectorData3D<double>)Convert.ChangeType(value, typeof(VectorData3D<double>));
+                    break;
+                default:
+                    break;
             }
         }
+
+        #endregion
+
+        #region Page Commands
 
         private void CommandInvokedHandler(IUICommand command)
         {
@@ -421,10 +511,29 @@ namespace Niuware.MSBandViewer.Views
             }
         }
 
+        #endregion
+
+        #region Page Events
+
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
             SyncBand();
         }
+
+        private void Page_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            accelerometerLineGraph[0].SizeChanged();
+            accelerometerLineGraph[1].SizeChanged();
+            accelerometerLineGraph[2].SizeChanged();
+
+            gyroscopeLineGraph[0].SizeChanged();
+            gyroscopeLineGraph[1].SizeChanged();
+            gyroscopeLineGraph[2].SizeChanged();
+        }
+
+        #endregion
+
+        #region Page Button Events
 
         private void syncBandButton_Click(object sender, RoutedEventArgs e)
         {
@@ -445,9 +554,21 @@ namespace Niuware.MSBandViewer.Views
             {
                 StorageFile sampleFile = await storageFolder.CreateFileAsync("msbv-session-data" + DateTime.Now.ToString("ddMMyy-HHmm") + ".csv", CreationCollisionOption.GenerateUniqueName);
 
-                foreach (VectorDataTime3D<double> sv in gyroscopeData)
+                //int c = 0;
+
+                //foreach (int hrv in heartRateData)
+                //{
+                //    //await FileIO.AppendTextAsync(sampleFile, gyroscopeData[c++] hrv.ToString() + "\n");
+                //}
+
+                //foreach (VectorDataTime3D<double> sv in gyroscopeData)
+                //{
+                //    await FileIO.AppendTextAsync(sampleFile, sv.ToString() + "\n");
+                //}
+
+                foreach (KeyValuePair<DateTime, SensorData> kvp in sensorData)
                 {
-                    await FileIO.AppendTextAsync(sampleFile, sv.ToString() + "\n");
+                    await FileIO.AppendTextAsync(sampleFile, kvp.Key.ToString("HH:mm:ss") + "," + kvp.Value.ToString() + "\n");
                 }
 
                 SetSyncMessage("Session data succesfully saved.", false);
@@ -458,25 +579,11 @@ namespace Niuware.MSBandViewer.Views
             }
         }
 
-        private async void SetSyncMessage(string message, bool progress = true)
+        private void Button_Click(object sender, RoutedEventArgs e)
         {
-            await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => 
-            {
-                syncProgressRing.IsActive = progress;
-                syncTextBlock.Text = message;
-                syncGrid.Visibility = Visibility.Visible;
-            });
+            AppShell.Current.RemoteCheckTogglePaneButton();
         }
 
-        private void Page_SizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            accelerometerLineGraph[0].SizeChanged();
-            accelerometerLineGraph[1].SizeChanged();
-            accelerometerLineGraph[2].SizeChanged();
-
-            gyroscopeLineGraph[0].SizeChanged();
-            gyroscopeLineGraph[1].SizeChanged();
-            gyroscopeLineGraph[2].SizeChanged();
-        }
+        #endregion
     }
 }

@@ -74,7 +74,7 @@
                                         </Storyboard>
                                     </Grid.Resources>
                                     <Canvas x:Name="heartRateCanvas" Height="60" Width="60">
-                                        <Path x:Name="heartRatePath" Fill="White" 
+                                        <Path x:Name="heartRatePath" Fill="White" Stroke="White" StrokeThickness="1"
                                                 Data="M 241,200 
                                                       A 20,20 0 0 0 200,240
                                                       C 210,250 240,270 240,270
@@ -92,7 +92,7 @@
                                                FontSize="28" Margin="0 0 0 8" Foreground="Black" FontWeight="SemiBold">--</TextBlock>
                                 </Grid>
                                 <StackPanel Margin="20 0 0 0">
-                                    <TextBlock>Average bpm: <Run x:Name="heartRateAverageBpmTextBlock">0</Run></TextBlock>
+                                    <TextBlock xml:space="preserve">Min: <Run x:Name="heartRateMinBpmTextBlock">0</Run>   Max: <Run x:Name="heartRateMaxBpmTextBlock">0</Run></TextBlock>
                                     <TextBlock>RR Interval: <Run x:Name="heartRateRRTextblock">0</Run></TextBlock>
                                     <TextBlock>Status: <Run x:Name="heartRateStatusTextBlock">Acquiring</Run></TextBlock>
                                 </StackPanel>
