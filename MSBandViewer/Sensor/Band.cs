@@ -1,10 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Band;
 using Microsoft.Band.Sensors;
 using Microsoft.Band.Personalization;
-using Windows.UI.Popups;
-using Windows.UI.Xaml.Media.Imaging;
 
 namespace Niuware.MSBandViewer.Sensor
 {
@@ -15,30 +15,92 @@ namespace Niuware.MSBandViewer.Sensor
         BAND_IO_EXCEPTION,
         SYNC_ERROR,
         SYNCED,
+        SYNCED_LIMITED_ACCESS,
         UNKNOWN
     }
 
     class Band
     {
+        // MSBand interfaces
         IBandInfo[] pairedBands;
         IBandClient bandClient;
 
+        // Status of the band
         BandSyncStatus status;
         public BandSyncStatus Status { get { return status; } }
         public HeartRateQuality HeartRateLocked { get; private set; }
-        public WriteableBitmap BandScreenImage { get; private set; }
+
+        // Info of the band
+        public BandImage BandBackgroundImage { get; private set; }
         public string BandName { get; private set; }
+
+        // Sensor data
         public SensorData Data { get { return data; } }
-
-        bool bandUserConsent;
-        int pairedBandIndex;
-
         SensorData data;
+
+        // Session data
+        Dictionary<DateTime, SensorData> sessionData;
+        public Dictionary<DateTime, SensorData> SessionData { get { return sessionData; } }
+
+        // Session data timer
+        Timer sessionDataTimer;
+        public int SessionDataTimerUpdate{ get; set; }
+        bool sessionInProgress;
+        public bool IsSessionInProgress { get { return sessionInProgress; } }
+
+        // User's band information
+        bool sensorRRUserConsent, sensorHRUserConsent;
+        public bool SensorRRUserConsent { get { return sensorRRUserConsent; } }
+        public bool SensorHRUserConsent {  get { return sensorHRUserConsent; } }
+
+        // Current preselected band
+        int pairedBandIndex;
 
         public Band()
         {
             data = new SensorData();
             status = BandSyncStatus.UNKNOWN;
+            SessionDataTimerUpdate = 1000; // in milliseconds
+
+            sessionData = new Dictionary<DateTime, SensorData>();
+
+            sessionDataTimer = new Timer(sessionDataTimer_Callback, null, Timeout.Infinite, SessionDataTimerUpdate);
+        }
+
+        private void sessionDataTimer_Callback(object state)
+        {
+            DateTime currentTime = 
+                new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute, DateTime.Now.Second);
+
+            if (!sessionData.ContainsKey(currentTime))
+            {
+                sessionData.Add(currentTime, data);
+            }
+        }
+
+        public void StartSession()
+        {
+            sessionInProgress = true;
+
+            ClearSession();
+            sessionDataTimer.Change(0, SessionDataTimerUpdate);
+        }
+
+        public void EndSession(bool clear = false)
+        {
+            sessionInProgress = false;
+
+            sessionDataTimer.Change(Timeout.Infinite, SessionDataTimerUpdate);
+
+            if (clear)
+            {
+                ClearSession();
+            }
+        }
+
+        public void ClearSession()
+        {
+            sessionData.Clear();
         }
 
         public async Task SyncBand(int bandIndex = 0)
@@ -114,11 +176,17 @@ namespace Niuware.MSBandViewer.Sensor
         {
             if (bandClient != null)
             {
-                bandClient.SensorManager.HeartRate.ReadingChanged -= HeartRate_ReadingChanged;
-                bandClient.SensorManager.HeartRate.StopReadingsAsync();
+                if (sensorHRUserConsent)
+                {
+                    bandClient.SensorManager.HeartRate.ReadingChanged -= HeartRate_ReadingChanged;
+                    bandClient.SensorManager.HeartRate.StopReadingsAsync();
+                }
 
-                bandClient.SensorManager.RRInterval.ReadingChanged -= RRInterval_ReadingChanged;
-                bandClient.SensorManager.RRInterval.StopReadingsAsync();
+                if (sensorRRUserConsent)
+                {
+                    bandClient.SensorManager.RRInterval.ReadingChanged -= RRInterval_ReadingChanged;
+                    bandClient.SensorManager.RRInterval.StopReadingsAsync();
+                }
 
                 bandClient.SensorManager.SkinTemperature.ReadingChanged -= SkinTemperature_ReadingChanged;
                 bandClient.SensorManager.SkinTemperature.StopReadingsAsync();
@@ -147,9 +215,7 @@ namespace Niuware.MSBandViewer.Sensor
             BandName = bandName[0].Remove(bandName[0].LastIndexOf(' '));
 
             // Get Me Tile image
-            BandImage bandImage = await bandClient.PersonalizationManager.GetMeTileImageAsync();
-
-            BandScreenImage = bandImage.ToWriteableBitmap();
+            BandBackgroundImage = await bandClient.PersonalizationManager.GetMeTileImageAsync();
         }
 
         private async void SuscribeContactSensor()
@@ -186,29 +252,43 @@ namespace Niuware.MSBandViewer.Sensor
         {
             if (bandClient.SensorManager.HeartRate.GetCurrentUserConsent() == UserConsent.Granted)
             {
-                bandUserConsent = true;
+                sensorHRUserConsent = true;
             }
             else
             {
-                bandUserConsent = await bandClient.SensorManager.HeartRate.RequestUserConsentAsync();
+                sensorHRUserConsent = await bandClient.SensorManager.HeartRate.RequestUserConsentAsync();
             }
 
-            if (!bandUserConsent)
+            if (!sensorHRUserConsent)
             {
-                MessageDialog msgDlg = new MessageDialog("Access to the Heart Rate Sensor was denied.");
-                await msgDlg.ShowAsync();
+                status = BandSyncStatus.SYNCED_LIMITED_ACCESS;
 
                 return;
             }
 
             // Subscribe to HeartRate sensor
             bandClient.SensorManager.HeartRate.ReadingChanged += HeartRate_ReadingChanged;
-
             await bandClient.SensorManager.HeartRate.StartReadingsAsync();
         }
 
         private async void SuscribeRRInterval()
         {
+            if (bandClient.SensorManager.RRInterval.GetCurrentUserConsent() == UserConsent.Granted)
+            {
+                sensorRRUserConsent = true;
+            }
+            else
+            {
+                sensorRRUserConsent = await bandClient.SensorManager.RRInterval.RequestUserConsentAsync();
+            }
+
+            if (!sensorRRUserConsent)
+            {
+                status = BandSyncStatus.SYNCED_LIMITED_ACCESS;
+
+                return;
+            }
+
             bandClient.SensorManager.RRInterval.ReadingChanged += RRInterval_ReadingChanged;
             await bandClient.SensorManager.RRInterval.StartReadingsAsync();
         }

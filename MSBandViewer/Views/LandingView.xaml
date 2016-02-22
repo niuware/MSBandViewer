@@ -12,7 +12,7 @@
         <CommandBar x:Name="commandBar" IsEnabled="False">
             <AppBarButton x:Name="syncBandButton" Icon="Sync" Label="sync band" Click="syncBandButton_Click" />
             <AppBarSeparator />
-            <AppBarButton Icon="Play" Label="start session" />
+            <AppBarButton x:Name="startOrStopSessionButtton" Icon="Play" Label="start session" Click="startOrStopSessionButtton_Click" />
             <AppBarButton Icon="save" Label="save" Click="saveSessionButton_Click" />
         </CommandBar>
     </Page.BottomAppBar>
@@ -29,13 +29,13 @@
         <Grid Grid.Row="1" x:Name="dashboardGrid">
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height=".3*" />
+                    <RowDefinition Height=".3*" MinHeight="300" />
                     <RowDefinition Height=".7*" />
                 </Grid.RowDefinitions>
                 <Grid x:Name="healthDataGrid" Grid.Row="0">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width=".3*" MinWidth="400" />
-                        <ColumnDefinition Width=".3*" MinWidth="300" />
+                        <ColumnDefinition Width="360" MinWidth="360" />
+                        <ColumnDefinition Width="250" MinWidth="250" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
                     <Grid x:Name="msBandActivityGrid" Grid.Column="0">
@@ -43,7 +43,7 @@
                             <TextBlock x:Name="msBandNameTextBlock" FontSize="32" Margin="0 0 0 20"></TextBlock>
                             <Grid>
                                 <Image Source="../Assets/msband.png" Width="320" Height="160" HorizontalAlignment="Left" />
-                                <Image x:Name="msBandMeTileImage" Margin="87,74,133,31" Width="149" Height="58" Stretch="Fill" />
+                                <Image x:Name="msBandMeTileImage" Margin="0,74,7,31" Width="150" MinWidth="150" Height="58" Stretch="UniformToFill" />
                                 <TextBlock x:Name="msBandClockTextBlock" Margin="86,88,34,0" FontSize="36" RenderTransformOrigin="0,0.5">
                                     <TextBlock.Projection>
                                         <PlaneProjection RotationX="2.337" RotationY="11.669" RotationZ="-1.492"/>
@@ -104,18 +104,18 @@
                             <TextBlock FontSize="32" Margin="0 0 0 0">Skin activity</TextBlock>
                             <StackPanel HorizontalAlignment="Left" VerticalAlignment="Top" Orientation="Horizontal">
                                 <StackPanel Orientation="Horizontal">
-                                    <Border Background="White" CornerRadius="3" Margin="0 0 20 0" Padding="5 0" Height="20">
+                                    <Border Background="White" CornerRadius="3" Margin="0 0 15 0" Padding="5 0" Height="20">
                                         <TextBlock FontSize="20" VerticalAlignment="Center" Foreground="Black" Padding="0 0 0 3">GSR</TextBlock>
                                     </Border>
                                     <TextBlock x:Name="gsrTextBlock" FontSize="56" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="0 0 0 18">--</TextBlock>
-                                    <TextBlock FontSize="36" VerticalAlignment="Center" Margin="20 0 0 0">M&#937;</TextBlock>
+                                    <TextBlock FontSize="34" VerticalAlignment="Center" Margin="15 0 0 0">M&#937;</TextBlock>
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="20 0 0 0">
-                                    <Border Background="White" CornerRadius="3" Margin="0 0 20 0" Padding="5 0" Height="20">
+                                    <Border Background="White" CornerRadius="3" Margin="0 0 15 0" Padding="5 0" Height="20">
                                         <TextBlock FontSize="20" VerticalAlignment="Center" Foreground="Black" Padding="0 0 0 3">TEMP</TextBlock>
                                     </Border>
                                     <TextBlock x:Name="skinTemperatureTextBlock" FontSize="56" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="0 0 0 18">--</TextBlock>
-                                    <TextBlock FontSize="36" VerticalAlignment="Center" Margin="20 0 0 0">°C</TextBlock>
+                                    <TextBlock FontSize="34" VerticalAlignment="Center" Margin="15 0 0 0">°C</TextBlock>
                                 </StackPanel>
                             </StackPanel>
                         </StackPanel>

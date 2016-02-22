@@ -29,8 +29,8 @@ namespace Niuware.MSBandViewer.Views
         List<LineGraph> accelerometerLineGraph;
         List<LineGraph> gyroscopeLineGraph;
 
-        Dictionary<DateTime, SensorData> sensorData;
-        SensorData currentSensorData;
+        //Dictionary<DateTime, SensorData> sensorData;
+        //SensorData currentSensorData;
 
         Band band;
 
@@ -64,8 +64,8 @@ namespace Niuware.MSBandViewer.Views
                 new LineGraph(ref gyroscopeGraphCanvas, new SolidColorBrush(Windows.UI.Colors.Gray), 10.0, 10.0, 0.15)
             };
 
-            sensorData = new Dictionary<DateTime, SensorData>();
-            currentSensorData = new SensorData();
+            //sensorData = new Dictionary<DateTime, SensorData>();
+            //currentSensorData = new SensorData();
 
             band = new Band();
         }
@@ -125,12 +125,12 @@ namespace Niuware.MSBandViewer.Views
                 gyroscopeLineGraph[2].UpdateGraph(band.Data.gyroscopeAngVel.Z);
             });
 
-            DateTime currentTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute, DateTime.Now.Second);
+            //DateTime currentTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute, DateTime.Now.Second);
 
-            if (!sensorData.ContainsKey(currentTime))
-            {
-                sensorData.Add(currentTime, band.Data);
-            }
+            //if (!sensorData.ContainsKey(currentTime))
+            //{
+            //    sensorData.Add(currentTime, band.Data);
+            //}
         }
 
         private async void Timer_Tick(object sender, object e)
@@ -165,6 +165,22 @@ namespace Niuware.MSBandViewer.Views
             band.UnsuscribeSensors();
             await band.SuscribeSensors();
 
+            if (band.Status == BandSyncStatus.SYNCED_LIMITED_ACCESS)
+            {
+                MessageDialog msgDlg = new MessageDialog("The access to the following sensors was denied:\n");
+
+                if (!band.SensorHRUserConsent)
+                {
+                    msgDlg.Content += "Heart Rate sensor\n";
+                }
+                if (!band.SensorRRUserConsent)
+                {
+                    msgDlg.Content += "RR Interval sensor";
+                }
+
+                await msgDlg.ShowAsync();
+            }
+
             //// Unsuscribe all sensors for possible previous unterminated connections
             //UnsuscribeAllSensors();
 
@@ -193,7 +209,7 @@ namespace Niuware.MSBandViewer.Views
             //SuscribeBandInfo();
             var bitmp = new BitmapImage();
 
-            msBandMeTileImage.Source = band.BandScreenImage;
+            msBandMeTileImage.Source = band.BandBackgroundImage.ToWriteableBitmap();
 
             // Start band UI clock
             await StartBandClock();
@@ -600,6 +616,30 @@ namespace Niuware.MSBandViewer.Views
             SyncBand();
         }
 
+        private async void startOrStopSessionButtton_Click(object sender, RoutedEventArgs e)
+        {
+            if (!band.IsSessionInProgress)
+            {
+                band.StartSession();
+
+                await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    startOrStopSessionButtton.Icon = new SymbolIcon(Symbol.Stop);
+                    startOrStopSessionButtton.Label = "stop session";
+                });
+            }
+            else
+            {
+                band.EndSession();
+
+                await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    startOrStopSessionButtton.Icon = new SymbolIcon(Symbol.Play);
+                    startOrStopSessionButtton.Label = "start session";
+                });
+            }
+        }
+
         private async void saveSessionButton_Click(object sender, RoutedEventArgs e)
         {
             SetSyncMessage("Saving session data...");
@@ -625,7 +665,7 @@ namespace Niuware.MSBandViewer.Views
                 //    await FileIO.AppendTextAsync(sampleFile, sv.ToString() + "\n");
                 //}
 
-                foreach (KeyValuePair<DateTime, SensorData> kvp in sensorData)
+                foreach (KeyValuePair<DateTime, SensorData> kvp in band.SessionData)
                 {
                     await FileIO.AppendTextAsync(sampleFile, kvp.Key.ToString("HH:mm:ss") + "," + kvp.Value.ToString() + "\n");
                 }

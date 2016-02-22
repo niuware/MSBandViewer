@@ -108,12 +108,20 @@ namespace Niuware.MSBandViewer.DataModel
             targetCanvas.Children.Add(li);
         }
 
+        void ClearTargetCanvas()
+        {
+            targetCanvas.Children.Clear();
+        }
+
         /// <summary>
         /// If window is resized, change the origin of the graph
         /// </summary>
         public void SizeChanged()
         {
+            ClearTargetCanvas();
             yOrigin = targetCanvas.ActualHeight / 2.0;
         }
+
+
     }
 }
