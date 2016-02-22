@@ -2,41 +2,29 @@
 
 namespace Niuware.MSBandViewer.Sensor
 {
-    public enum SensorType
-    {
-        HEARTRATE,
-        GYROSCOPE,
-        GSR,
-        TEMPERATURE,
-        ACCELEROMETER
-    }
-
     class SensorData
     {
-        public VectorData3D<double> gyroscopeAngVel;
-        public VectorData3D<double> accelerometer;
-        public int heartRate;
-        public bool contact;
+        public int heartRate = 0;
         public double rrInterval;
         public int gsr;
         public double temperature;
+        public VectorData3D<double> accelerometer;
+        public VectorData3D<double> gyroscopeAngVel;
+        public bool contact;
 
         public SensorData() { }
 
         public override string ToString()
         {
-            return heartRate.ToString() + "," + gyroscopeAngVel.X + "," + gyroscopeAngVel.Y + "," + gyroscopeAngVel.Z;
+            return heartRate.ToString() + "," + rrInterval + "," + gsr.ToString() + "," + temperature + "," + 
+                accelerometer.X + "," + accelerometer.Y + "," + accelerometer.Z + "," +
+                gyroscopeAngVel.X + "," + gyroscopeAngVel.Y + "," + gyroscopeAngVel.Z + "," +
+                contact;
         }
 
-        public bool IsEmpty()
+        public SensorData Copy()
         {
-            if (heartRate == 0)
-                return true;
-
-            if (gyroscopeAngVel.X == 0.0 && gyroscopeAngVel.Y == 0.0 && gyroscopeAngVel.Z == 0.0)
-                return true;
-
-            return false;
+            return (SensorData)this.MemberwiseClone();
         }
     }
 }

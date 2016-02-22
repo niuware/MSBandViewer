@@ -24,7 +24,7 @@
         </Grid.RowDefinitions>
         <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Top" Background="{ThemeResource SystemControlBackgroundChromeMediumBrush}" HorizontalAlignment="Stretch">
             <Button Template="{StaticResource SplitViewContentMenuButtonTemplate}" Click="Button_Click" />
-            <TextBlock FontSize="24" Margin="10 0 0 0" VerticalAlignment="Center">Dashboard</TextBlock>
+            <TextBlock x:Name="pageTitle" FontSize="24" Margin="10 0 0 0" VerticalAlignment="Center">Dashboard</TextBlock>
         </StackPanel>
         <Grid Grid.Row="1" x:Name="dashboardGrid">
             <Grid>
@@ -44,6 +44,16 @@
                             <Grid>
                                 <Image Source="../Assets/msband.png" Width="320" Height="160" HorizontalAlignment="Left" />
                                 <Image x:Name="msBandMeTileImage" Margin="0,74,7,31" Width="150" MinWidth="150" Height="58" Stretch="UniformToFill" />
+                                <TextBlock x:Name="msBandRecordTextBlock" Margin="88,79,34,0" FontSize="12" Text="● rec" Visibility="Collapsed">
+                                    <TextBlock.Projection>
+                                        <PlaneProjection RotationX="1.271" RotationY="0.065" RotationZ="-2.087"/>
+                                    </TextBlock.Projection>
+                                    <TextBlock.Resources>
+                                        <Storyboard x:Name="msBandRecordTextBlockStoryboard">
+                                            <DoubleAnimation Storyboard.TargetName="msBandRecordTextBlock" Storyboard.TargetProperty="Opacity" From="1.0" To="0.3" AutoReverse="True" Duration="0:0:1.0" RepeatBehavior="Forever" />
+                                        </Storyboard>
+                                    </TextBlock.Resources>
+                                </TextBlock>
                                 <TextBlock x:Name="msBandClockTextBlock" Margin="86,88,34,0" FontSize="36" RenderTransformOrigin="0,0.5">
                                     <TextBlock.Projection>
                                         <PlaneProjection RotationX="2.337" RotationY="11.669" RotationZ="-1.492"/>

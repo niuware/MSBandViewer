@@ -16,6 +16,7 @@ namespace Niuware.MSBandViewer.Sensor
         SYNC_ERROR,
         SYNCED,
         SYNCED_LIMITED_ACCESS,
+        SYNCED_TERMINATED,
         UNKNOWN
     }
 
@@ -53,6 +54,9 @@ namespace Niuware.MSBandViewer.Sensor
         public bool SensorRRUserConsent { get { return sensorRRUserConsent; } }
         public bool SensorHRUserConsent {  get { return sensorHRUserConsent; } }
 
+        bool isWorn = true;
+        public bool IsWorn { get { return isWorn; } }
+
         // Current preselected band
         int pairedBandIndex;
 
@@ -74,7 +78,8 @@ namespace Niuware.MSBandViewer.Sensor
 
             if (!sessionData.ContainsKey(currentTime))
             {
-                sessionData.Add(currentTime, data);
+                data.contact = isWorn;
+                sessionData.Add(currentTime, data.Copy());
             }
         }
 
@@ -172,21 +177,24 @@ namespace Niuware.MSBandViewer.Sensor
             await bandClient.NotificationManager.VibrateAsync(Microsoft.Band.Notifications.VibrationType.NotificationOneTone);
         }
 
-        public void UnsuscribeSensors(bool unsuscribeContact = false)
+        /// <summary>
+        /// Unsuscribe all sensor reading events and stop its reading
+        /// </summary>
+        /// <param name="unsuscribeContact">If there is no need to know if the user is wearing the band anymore, then unscribe contact sensor too</param>
+        public void UnsuscribeSensors(bool unsuscribeContact = false, bool updateStatus = false)
         {
+            if (updateStatus)
+            {
+                status = BandSyncStatus.SYNCED_TERMINATED;
+            }
+
             if (bandClient != null)
             {
-                if (sensorHRUserConsent)
-                {
-                    bandClient.SensorManager.HeartRate.ReadingChanged -= HeartRate_ReadingChanged;
-                    bandClient.SensorManager.HeartRate.StopReadingsAsync();
-                }
+                bandClient.SensorManager.HeartRate.ReadingChanged -= HeartRate_ReadingChanged;
+                bandClient.SensorManager.HeartRate.StopReadingsAsync();
 
-                if (sensorRRUserConsent)
-                {
-                    bandClient.SensorManager.RRInterval.ReadingChanged -= RRInterval_ReadingChanged;
-                    bandClient.SensorManager.RRInterval.StopReadingsAsync();
-                }
+                bandClient.SensorManager.RRInterval.ReadingChanged -= RRInterval_ReadingChanged;
+                bandClient.SensorManager.RRInterval.StopReadingsAsync();
 
                 bandClient.SensorManager.SkinTemperature.ReadingChanged -= SkinTemperature_ReadingChanged;
                 bandClient.SensorManager.SkinTemperature.StopReadingsAsync();
@@ -297,7 +305,7 @@ namespace Niuware.MSBandViewer.Sensor
         {
             IBandContactReading contactRead = e.SensorReading;
 
-            data.contact = Convert.ToBoolean(contactRead.State);
+            isWorn = Convert.ToBoolean(contactRead.State);
         }
 
         private void RRInterval_ReadingChanged(object sender, BandSensorReadingEventArgs<IBandRRIntervalReading> e)
