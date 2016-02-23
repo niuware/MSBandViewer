@@ -32,9 +32,6 @@ namespace Niuware.MSBandViewer.Views
 
         DispatcherTimer timer, sensorTimer;
 
-        //List<LineGraph> accelerometerLineGraph;
-        //List<LineGraph> gyroscopeLineGraph;
-
         Band band;
 
         SensorData bandData;
@@ -74,31 +71,17 @@ namespace Niuware.MSBandViewer.Views
             heartRateStoryboard.Begin();
             heartRateStoryboard.Pause();
 
-            //accelerometerLineGraph = new List<LineGraph>()
-            //{
-            //    new LineGraph(ref accelerometerGraphCanvas, new SolidColorBrush(Windows.UI.Colors.White), 0.0, 10.0, 2.5),
-            //    new LineGraph(ref accelerometerGraphCanvas, (SolidColorBrush)Resources["SystemControlHighlightAccentBrush"], -10.0, 10.0, 2.5),
-            //    new LineGraph(ref accelerometerGraphCanvas, new SolidColorBrush(Windows.UI.Colors.Gray), 10.0, 10.0, 2.5)
-            //};
-
-            //gyroscopeLineGraph = new List<LineGraph>()
-            //{
-            //    new LineGraph(ref gyroscopeGraphCanvas, new SolidColorBrush(Windows.UI.Colors.White), 0.0, 10.0, 0.15),
-            //    new LineGraph(ref gyroscopeGraphCanvas, (SolidColorBrush)Resources["SystemControlHighlightAccentBrush"], -10.0, 10.0, 0.15),
-            //    new LineGraph(ref gyroscopeGraphCanvas, new SolidColorBrush(Windows.UI.Colors.Gray), 10.0, 10.0, 0.15)
-            //};
-
             band = new Band();
 
             accelerometerLineGraphCanvas.Label = "Accelerometer";
-            accelerometerLineGraphCanvas.AddLineGraph(new SolidColorBrush(Windows.UI.Colors.White), 0.0, 10.0, 2.5, "X:");
-            accelerometerLineGraphCanvas.AddLineGraph((SolidColorBrush)Resources["SystemControlHighlightAccentBrush"], -10.0, 10.0, 2.5, "Y:");
-            accelerometerLineGraphCanvas.AddLineGraph(new SolidColorBrush(Windows.UI.Colors.Gray), 10.0, 10.0, 2.5, "Z:");
+            accelerometerLineGraphCanvas.AddLineGraph(new SolidColorBrush(Windows.UI.Colors.White), 0.0, 10.0, 2.5, "X");
+            accelerometerLineGraphCanvas.AddLineGraph((SolidColorBrush)Resources["SystemControlHighlightAccentBrush"], -10.0, 10.0, 2.5, "Y");
+            accelerometerLineGraphCanvas.AddLineGraph(new SolidColorBrush(Windows.UI.Colors.Gray), 10.0, 10.0, 2.5, "Z");
 
             gyroscopeLineGraphCanvas.Label = "Gyroscope (angular vel.)";
-            gyroscopeLineGraphCanvas.AddLineGraph(new SolidColorBrush(Windows.UI.Colors.White), 0.0, 10.0, 0.15, "X:");
-            gyroscopeLineGraphCanvas.AddLineGraph((SolidColorBrush)Resources["SystemControlHighlightAccentBrush"], -10.0, 10.0, 0.15, "Y:");
-            gyroscopeLineGraphCanvas.AddLineGraph(new SolidColorBrush(Windows.UI.Colors.Gray), 10.0, 10.0, 0.15, "Z:");
+            gyroscopeLineGraphCanvas.AddLineGraph(new SolidColorBrush(Windows.UI.Colors.White), 0.0, 10.0, 0.15, "X");
+            gyroscopeLineGraphCanvas.AddLineGraph((SolidColorBrush)Resources["SystemControlHighlightAccentBrush"], -10.0, 10.0, 0.15, "Y");
+            gyroscopeLineGraphCanvas.AddLineGraph(new SolidColorBrush(Windows.UI.Colors.Gray), 10.0, 10.0, 0.15, "Z");
         }
 
         private async void SensorTimer_Tick(object sender, object e)
@@ -134,14 +117,6 @@ namespace Niuware.MSBandViewer.Views
                     heartRateStoryboard.Pause();
                 }
 
-                //accelerometerLineGraph[0].UpdateGraph(band.Data.accelerometer.X);
-                //accelerometerLineGraph[1].UpdateGraph(band.Data.accelerometer.Y);
-                //accelerometerLineGraph[2].UpdateGraph(band.Data.accelerometer.Z);
-
-                //gyroscopeLineGraph[0].UpdateGraph(band.Data.gyroscopeAngVel.X);
-                //gyroscopeLineGraph[1].UpdateGraph(band.Data.gyroscopeAngVel.Y);
-                //gyroscopeLineGraph[2].UpdateGraph(band.Data.gyroscopeAngVel.Z);
-
                 accelerometerLineGraphCanvas.UpdateValues(new double[]
                 {
                     BandData.accelerometer.X,
@@ -164,8 +139,6 @@ namespace Niuware.MSBandViewer.Views
                 {
                     gyroscopeLineGraphCanvas.Reset();
                     accelerometerLineGraphCanvas.Reset();
-                    //gyroscopeGraphCanvas.Children.Clear();
-                    //accelerometerGraphCanvas.Children.Clear();
 
                     SetSyncMessage("Waiting for band user...");
                 }
@@ -326,17 +299,6 @@ namespace Niuware.MSBandViewer.Views
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
             SyncBand();
-        }
-
-        private void Page_SizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            //accelerometerLineGraph[0].SizeChanged();
-            //accelerometerLineGraph[1].SizeChanged();
-            //accelerometerLineGraph[2].SizeChanged();
-
-            //gyroscopeLineGraph[0].SizeChanged();
-            //gyroscopeLineGraph[1].SizeChanged();
-            //gyroscopeLineGraph[2].SizeChanged();
         }
 
         #endregion

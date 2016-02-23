@@ -7,7 +7,7 @@
     xmlns:converters="using:Niuware.MSBandViewer.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    Loaded="Page_Loaded" SizeChanged="Page_SizeChanged"
+    Loaded="Page_Loaded" 
     DataContext="{Binding RelativeSource={RelativeSource Self}}"
     mc:Ignorable="d">
 
@@ -146,52 +146,8 @@
                         <ColumnDefinition Width=".2*" />
                         <ColumnDefinition Width=".2*" />
                     </Grid.ColumnDefinitions>
-                    <!--<Grid Grid.Column="0" Padding="15">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height=".3*" />
-                                <RowDefinition Height=".3*" />
-                                <RowDefinition Height=".3*" />
-                            </Grid.RowDefinitions>
-                            <Line Grid.Row="0" Stretch="Fill" Stroke="{ThemeResource SystemControlHighlightListLowBrush}" StrokeThickness="1" X1="0" X2="{Binding ActualWidth, ElementName=accelerometerGraphCanvas}" />
-                            <Line Grid.Row="1" Stretch="Fill" Stroke="{ThemeResource SystemControlHighlightListLowBrush}" StrokeThickness="1" X1="0" X2="{Binding ActualWidth, ElementName=accelerometerGraphCanvas}" />
-                            <Line Grid.Row="2" Stretch="Fill" Stroke="{ThemeResource SystemControlHighlightListLowBrush}" StrokeThickness="1" X1="0" X2="{Binding ActualWidth, ElementName=accelerometerGraphCanvas}" />
-                        </Grid>
-                        <Canvas x:Name="accelerometerGraphCanvas" />
-                        <StackPanel HorizontalAlignment="Left" VerticalAlignment="Bottom" Style="{StaticResource GraphDetailStackPanelStyle}" Margin="0 0 0 40">
-                            <TextBlock FontSize="24" Margin="0 0 0 10">Accelerometer</TextBlock>
-                            <TextBlock Foreground="White">X: 
-                                <Run Text="{x:Bind Path=BandData.accelerometer.X,Mode=OneWay,Converter={StaticResource AccelerometerConverter}}" /></TextBlock>
-                            <TextBlock Foreground="{ThemeResource SystemControlHighlightAccentBrush}">Y: 
-                                <Run Text="{x:Bind Path=BandData.accelerometer.Y,Mode=OneWay,Converter={StaticResource AccelerometerConverter}}" /></TextBlock>
-                            <TextBlock Foreground="Gray">Z: 
-                                <Run Text="{x:Bind Path=BandData.accelerometer.Z,Mode=OneWay,Converter={StaticResource AccelerometerConverter}}" /></TextBlock>
-                        </StackPanel>
-                    </Grid>-->
                     <controls:LineGraphCanvas x:Name="accelerometerLineGraphCanvas" Grid.Column="0" />
                     <controls:LineGraphCanvas x:Name="gyroscopeLineGraphCanvas" Grid.Column="1" />
-                    <!--<Grid Grid.Column="1" Padding="15" Visibility="Collapsed">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height=".3*" />
-                                <RowDefinition Height=".3*" />
-                                <RowDefinition Height=".3*" />
-                            </Grid.RowDefinitions>
-                            <Line Grid.Row="0" Stretch="Fill" Stroke="{ThemeResource SystemControlHighlightListLowBrush}" StrokeThickness="1" X1="0" X2="{Binding ActualWidth, ElementName=gyroscopeGraphCanvas}" />
-                            <Line Grid.Row="1" Stretch="Fill" Stroke="{ThemeResource SystemControlHighlightListLowBrush}" StrokeThickness="1" X1="0" X2="{Binding ActualWidth, ElementName=gyroscopeGraphCanvas}" />
-                            <Line Grid.Row="2" Stretch="Fill" Stroke="{ThemeResource SystemControlHighlightListLowBrush}" StrokeThickness="1" X1="0" X2="{Binding ActualWidth, ElementName=gyroscopeGraphCanvas}" />
-                        </Grid>
-                        <Canvas x:Name="gyroscopeGraphCanvas" />
-                        <StackPanel HorizontalAlignment="Left" VerticalAlignment="Bottom" Style="{StaticResource GraphDetailStackPanelStyle}" Margin="0 0 0 40">
-                            <TextBlock FontSize="24" Margin="0 0 0 10">Gyroscope (angular vel.)</TextBlock>
-                            <TextBlock Foreground="White">X: 
-                                <Run Text="{x:Bind Path=BandData.gyroscopeAngVel.X,Mode=OneWay,Converter={StaticResource AccelerometerConverter}}" /></TextBlock>
-                            <TextBlock x:Name="gyroscopeValueY" Foreground="{ThemeResource SystemControlHighlightAccentBrush}">Y: 
-                                <Run Text="{x:Bind Path=BandData.gyroscopeAngVel.Y,Mode=OneWay,Converter={StaticResource AccelerometerConverter}}" /></TextBlock>
-                            <TextBlock x:Name="gyroscopeValueZ" Foreground="Gray">Z:
-                                <Run Text="{x:Bind Path=BandData.gyroscopeAngVel.Z,Mode=OneWay,Converter={StaticResource AccelerometerConverter}}" /></TextBlock>
-                        </StackPanel>
-                    </Grid>-->
                 </Grid>
             </Grid>
         </Grid>

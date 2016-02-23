@@ -105,7 +105,6 @@
     <Compile Include="Converters\GsrToStringConverter.cs" />
     <Compile Include="Converters\LineGraphLabelConverter.cs" />
     <Compile Include="Converters\TemperatureToStringConverter.cs" />
-    <Compile Include="DataModels\LineGraph.cs" />
     <Compile Include="DataModels\VectorData.cs" />
     <Compile Include="NavMenuItem.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
