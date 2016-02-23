@@ -3,7 +3,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Shapes;
 using Windows.UI.Xaml.Media;
 
-namespace Niuware.MSBandViewer.DataModel
+namespace Niuware.MSBandViewer.DataModels
 {
     public class LineGraph
     {

@@ -3,10 +3,18 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Niuware.MSBandViewer.Views"
+    xmlns:controls="using:Niuware.MSBandViewer.Controls"
+    xmlns:converters="using:Niuware.MSBandViewer.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Loaded="Page_Loaded" SizeChanged="Page_SizeChanged"
+    DataContext="{Binding RelativeSource={RelativeSource Self}}"
     mc:Ignorable="d">
+
+    <Page.Resources>
+        <converters:GsrToStringConverter x:Key="GsrConverter" />
+        <converters:TemperatureToStringConverter x:Key="TemperatureConverter" />
+    </Page.Resources>
 
     <Page.BottomAppBar>
         <CommandBar x:Name="commandBar" IsEnabled="False">
@@ -98,12 +106,12 @@
                                             <Path.RenderTransformOrigin>0.5 0.5</Path.RenderTransformOrigin>
                                         </Path>
                                     </Canvas>
-                                    <TextBlock x:Name="heartRateBpmTextBlock" HorizontalAlignment="Center" VerticalAlignment="Center" 
-                                               FontSize="28" Margin="0 0 0 8" Foreground="Black" FontWeight="SemiBold">--</TextBlock>
+                                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" 
+                                               FontSize="28" Margin="0 0 0 8" Foreground="Black" FontWeight="SemiBold" Text="{x:Bind Path=BandData.heartRate,Mode=OneWay}"></TextBlock>
                                 </Grid>
                                 <StackPanel Margin="20 0 0 0">
-                                    <TextBlock xml:space="preserve">Min: <Run x:Name="heartRateMinBpmTextBlock">0</Run>   Max: <Run x:Name="heartRateMaxBpmTextBlock">0</Run></TextBlock>
-                                    <TextBlock>RR Interval: <Run x:Name="heartRateRRTextblock">0</Run></TextBlock>
+                                    <TextBlock xml:space="preserve">Min: <Run Text="{x:Bind Path=MinHeartBpm,Mode=OneWay}" />   Max: <Run x:Name="heartRateMaxBpmTextBlock" Text="{x:Bind Path=MaxHeartBpm,Mode=OneWay}" /></TextBlock>
+                                    <TextBlock>RR Interval: <Run Text="{x:Bind Path=BandData.rrInterval,Mode=OneWay}" /></TextBlock>
                                     <TextBlock>Status: <Run x:Name="heartRateStatusTextBlock">Acquiring</Run></TextBlock>
                                 </StackPanel>
                             </StackPanel>
@@ -117,15 +125,17 @@
                                     <Border Background="White" CornerRadius="3" Margin="0 0 15 0" Padding="5 0" Height="20">
                                         <TextBlock FontSize="20" VerticalAlignment="Center" Foreground="Black" Padding="0 0 0 3">GSR</TextBlock>
                                     </Border>
-                                    <TextBlock x:Name="gsrTextBlock" FontSize="56" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="0 0 0 18">--</TextBlock>
-                                    <TextBlock FontSize="34" VerticalAlignment="Center" Margin="15 0 0 0">M&#937;</TextBlock>
+                                    <TextBlock FontSize="52" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="0 0 0 18"
+                                               Text="{x:Bind Path=BandData.gsr,Mode=OneWay,Converter={StaticResource GsrConverter}}"></TextBlock>
+                                    <TextBlock FontSize="34" VerticalAlignment="Center" Margin="5 0 0 0">M&#937;</TextBlock>
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="20 0 0 0">
                                     <Border Background="White" CornerRadius="3" Margin="0 0 15 0" Padding="5 0" Height="20">
                                         <TextBlock FontSize="20" VerticalAlignment="Center" Foreground="Black" Padding="0 0 0 3">TEMP</TextBlock>
                                     </Border>
-                                    <TextBlock x:Name="skinTemperatureTextBlock" FontSize="56" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="0 0 0 18">--</TextBlock>
-                                    <TextBlock FontSize="34" VerticalAlignment="Center" Margin="15 0 0 0">°C</TextBlock>
+                                    <TextBlock FontSize="52" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="0 0 0 18"
+                                               Text="{x:Bind Path=BandData.temperature,Mode=OneWay,Converter={StaticResource TemperatureConverter}}"></TextBlock>
+                                    <TextBlock FontSize="34" VerticalAlignment="Center" Margin="5 0 0 0">°C</TextBlock>
                                 </StackPanel>
                             </StackPanel>
                         </StackPanel>
@@ -136,7 +146,7 @@
                         <ColumnDefinition Width=".2*" />
                         <ColumnDefinition Width=".2*" />
                     </Grid.ColumnDefinitions>
-                    <Grid Grid.Column="0" Padding="15">
+                    <!--<Grid Grid.Column="0" Padding="15">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height=".3*" />
@@ -150,12 +160,17 @@
                         <Canvas x:Name="accelerometerGraphCanvas" />
                         <StackPanel HorizontalAlignment="Left" VerticalAlignment="Bottom" Style="{StaticResource GraphDetailStackPanelStyle}" Margin="0 0 0 40">
                             <TextBlock FontSize="24" Margin="0 0 0 10">Accelerometer</TextBlock>
-                            <TextBlock x:Name="accelerometerValueX" Foreground="White"></TextBlock>
-                            <TextBlock x:Name="accelerometerValueY" Foreground="{ThemeResource SystemControlHighlightAccentBrush}"></TextBlock>
-                            <TextBlock x:Name="accelerometerValueZ" Foreground="Gray"></TextBlock>
+                            <TextBlock Foreground="White">X: 
+                                <Run Text="{x:Bind Path=BandData.accelerometer.X,Mode=OneWay,Converter={StaticResource AccelerometerConverter}}" /></TextBlock>
+                            <TextBlock Foreground="{ThemeResource SystemControlHighlightAccentBrush}">Y: 
+                                <Run Text="{x:Bind Path=BandData.accelerometer.Y,Mode=OneWay,Converter={StaticResource AccelerometerConverter}}" /></TextBlock>
+                            <TextBlock Foreground="Gray">Z: 
+                                <Run Text="{x:Bind Path=BandData.accelerometer.Z,Mode=OneWay,Converter={StaticResource AccelerometerConverter}}" /></TextBlock>
                         </StackPanel>
-                    </Grid>
-                    <Grid Grid.Column="1" Padding="15">
+                    </Grid>-->
+                    <controls:LineGraphCanvas x:Name="accelerometerLineGraphCanvas" Grid.Column="0" />
+                    <controls:LineGraphCanvas x:Name="gyroscopeLineGraphCanvas" Grid.Column="1" />
+                    <!--<Grid Grid.Column="1" Padding="15" Visibility="Collapsed">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height=".3*" />
@@ -169,11 +184,14 @@
                         <Canvas x:Name="gyroscopeGraphCanvas" />
                         <StackPanel HorizontalAlignment="Left" VerticalAlignment="Bottom" Style="{StaticResource GraphDetailStackPanelStyle}" Margin="0 0 0 40">
                             <TextBlock FontSize="24" Margin="0 0 0 10">Gyroscope (angular vel.)</TextBlock>
-                            <TextBlock x:Name="gyroscopeValueX" Foreground="White"></TextBlock>
-                            <TextBlock x:Name="gyroscopeValueY" Foreground="{ThemeResource SystemControlHighlightAccentBrush}"></TextBlock>
-                            <TextBlock x:Name="gyroscopeValueZ" Foreground="Gray"></TextBlock>
+                            <TextBlock Foreground="White">X: 
+                                <Run Text="{x:Bind Path=BandData.gyroscopeAngVel.X,Mode=OneWay,Converter={StaticResource AccelerometerConverter}}" /></TextBlock>
+                            <TextBlock x:Name="gyroscopeValueY" Foreground="{ThemeResource SystemControlHighlightAccentBrush}">Y: 
+                                <Run Text="{x:Bind Path=BandData.gyroscopeAngVel.Y,Mode=OneWay,Converter={StaticResource AccelerometerConverter}}" /></TextBlock>
+                            <TextBlock x:Name="gyroscopeValueZ" Foreground="Gray">Z:
+                                <Run Text="{x:Bind Path=BandData.gyroscopeAngVel.Z,Mode=OneWay,Converter={StaticResource AccelerometerConverter}}" /></TextBlock>
                         </StackPanel>
-                    </Grid>
+                    </Grid>-->
                 </Grid>
             </Grid>
         </Grid>

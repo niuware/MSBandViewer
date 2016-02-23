@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Popups;
@@ -7,30 +8,59 @@ using Microsoft.Band;
 using Microsoft.Band.Sensors;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
-using Niuware.MSBandViewer.DataModel;
+using Niuware.MSBandViewer.DataModels;
 using Niuware.MSBandViewer.Sensor;
 using System.Collections.Generic;
 using Windows.Storage;
 
 namespace Niuware.MSBandViewer.Views
 {
-    public sealed partial class LandingView : Page
+    public sealed partial class LandingView : Page, INotifyPropertyChanged
     {
-        bool msBandUserConsent;
-        bool msBandUserContact;
+        int maxHeartBpm;
+        public int MaxHeartBpm
+        {
+            get { return maxHeartBpm; } set { maxHeartBpm = value; NotifyPropertyChanged("MaxHeartBpm"); }
+        }
 
-        int maxHeartBpm, minHeartBpm = 250;
+        int minHeartBpm;
+        public int MinHeartBpm
+        {
+            get { return minHeartBpm; }
+            set { minHeartBpm = value; NotifyPropertyChanged("MinHeartBpm"); }
+        }
 
         DispatcherTimer timer, sensorTimer;
 
-        List<LineGraph> accelerometerLineGraph;
-        List<LineGraph> gyroscopeLineGraph;
+        //List<LineGraph> accelerometerLineGraph;
+        //List<LineGraph> gyroscopeLineGraph;
 
         Band band;
+
+        SensorData bandData;
+        public SensorData BandData {
+            get { return band.Data; }
+            set {
+                bandData = value;
+                NotifyPropertyChanged("BandData");
+            }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public void NotifyPropertyChanged(string propertyName)
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
 
         public LandingView()
         {
             this.InitializeComponent();
+
+            MinHeartBpm = 250;
 
             timer = new DispatcherTimer();
             timer.Interval = new TimeSpan(0, 0, 1);
@@ -44,21 +74,31 @@ namespace Niuware.MSBandViewer.Views
             heartRateStoryboard.Begin();
             heartRateStoryboard.Pause();
 
-            accelerometerLineGraph = new List<LineGraph>()
-            {
-                new LineGraph(ref accelerometerGraphCanvas, new SolidColorBrush(Windows.UI.Colors.White), 0.0, 10.0, 2.5),
-                new LineGraph(ref accelerometerGraphCanvas, (SolidColorBrush)Resources["SystemControlHighlightAccentBrush"], -10.0, 10.0, 2.5),
-                new LineGraph(ref accelerometerGraphCanvas, new SolidColorBrush(Windows.UI.Colors.Gray), 10.0, 10.0, 2.5)
-            };
+            //accelerometerLineGraph = new List<LineGraph>()
+            //{
+            //    new LineGraph(ref accelerometerGraphCanvas, new SolidColorBrush(Windows.UI.Colors.White), 0.0, 10.0, 2.5),
+            //    new LineGraph(ref accelerometerGraphCanvas, (SolidColorBrush)Resources["SystemControlHighlightAccentBrush"], -10.0, 10.0, 2.5),
+            //    new LineGraph(ref accelerometerGraphCanvas, new SolidColorBrush(Windows.UI.Colors.Gray), 10.0, 10.0, 2.5)
+            //};
 
-            gyroscopeLineGraph = new List<LineGraph>()
-            {
-                new LineGraph(ref gyroscopeGraphCanvas, new SolidColorBrush(Windows.UI.Colors.White), 0.0, 10.0, 0.15),
-                new LineGraph(ref gyroscopeGraphCanvas, (SolidColorBrush)Resources["SystemControlHighlightAccentBrush"], -10.0, 10.0, 0.15),
-                new LineGraph(ref gyroscopeGraphCanvas, new SolidColorBrush(Windows.UI.Colors.Gray), 10.0, 10.0, 0.15)
-            };
+            //gyroscopeLineGraph = new List<LineGraph>()
+            //{
+            //    new LineGraph(ref gyroscopeGraphCanvas, new SolidColorBrush(Windows.UI.Colors.White), 0.0, 10.0, 0.15),
+            //    new LineGraph(ref gyroscopeGraphCanvas, (SolidColorBrush)Resources["SystemControlHighlightAccentBrush"], -10.0, 10.0, 0.15),
+            //    new LineGraph(ref gyroscopeGraphCanvas, new SolidColorBrush(Windows.UI.Colors.Gray), 10.0, 10.0, 0.15)
+            //};
 
             band = new Band();
+
+            accelerometerLineGraphCanvas.Label = "Accelerometer";
+            accelerometerLineGraphCanvas.AddLineGraph(new SolidColorBrush(Windows.UI.Colors.White), 0.0, 10.0, 2.5, "X:");
+            accelerometerLineGraphCanvas.AddLineGraph((SolidColorBrush)Resources["SystemControlHighlightAccentBrush"], -10.0, 10.0, 2.5, "Y:");
+            accelerometerLineGraphCanvas.AddLineGraph(new SolidColorBrush(Windows.UI.Colors.Gray), 10.0, 10.0, 2.5, "Z:");
+
+            gyroscopeLineGraphCanvas.Label = "Gyroscope (angular vel.)";
+            gyroscopeLineGraphCanvas.AddLineGraph(new SolidColorBrush(Windows.UI.Colors.White), 0.0, 10.0, 0.15, "X:");
+            gyroscopeLineGraphCanvas.AddLineGraph((SolidColorBrush)Resources["SystemControlHighlightAccentBrush"], -10.0, 10.0, 0.15, "Y:");
+            gyroscopeLineGraphCanvas.AddLineGraph(new SolidColorBrush(Windows.UI.Colors.Gray), 10.0, 10.0, 0.15, "Z:");
         }
 
         private async void SensorTimer_Tick(object sender, object e)
@@ -68,15 +108,17 @@ namespace Niuware.MSBandViewer.Views
                 return;
             }
 
-            maxHeartBpm = (band.Data.heartRate > maxHeartBpm) ? band.Data.heartRate : maxHeartBpm;
-            minHeartBpm = (minHeartBpm < band.Data.heartRate) ? minHeartBpm : band.Data.heartRate;
+            BandData = band.Data;
+
+            if (band.HeartRateLocked == HeartRateQuality.Locked)
+            {
+                MaxHeartBpm = (BandData.heartRate > MaxHeartBpm) ? BandData.heartRate : MaxHeartBpm;
+                MinHeartBpm = (MinHeartBpm < BandData.heartRate) ? MinHeartBpm : BandData.heartRate;
+            }
 
             await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
             {
-                heartRateBpmTextBlock.Text = band.Data.heartRate.ToString();
                 heartRateStatusTextBlock.Text = band.HeartRateLocked.ToString();
-                heartRateMaxBpmTextBlock.Text = maxHeartBpm.ToString();
-                heartRateMinBpmTextBlock.Text = minHeartBpm.ToString();
 
                 if (band.HeartRateLocked == HeartRateQuality.Locked)
                 {
@@ -89,31 +131,30 @@ namespace Niuware.MSBandViewer.Views
                 else
                 {
                     heartRatePath.Fill = new SolidColorBrush(Windows.UI.Colors.Transparent);
-                    heartRateBpmTextBlock.Text = "--";
                     heartRateStoryboard.Pause();
                 }
 
-                heartRateRRTextblock.Text = band.Data.rrInterval.ToString();
+                //accelerometerLineGraph[0].UpdateGraph(band.Data.accelerometer.X);
+                //accelerometerLineGraph[1].UpdateGraph(band.Data.accelerometer.Y);
+                //accelerometerLineGraph[2].UpdateGraph(band.Data.accelerometer.Z);
 
-                skinTemperatureTextBlock.Text = String.Format("{0:0.#}", band.Data.temperature);
+                //gyroscopeLineGraph[0].UpdateGraph(band.Data.gyroscopeAngVel.X);
+                //gyroscopeLineGraph[1].UpdateGraph(band.Data.gyroscopeAngVel.Y);
+                //gyroscopeLineGraph[2].UpdateGraph(band.Data.gyroscopeAngVel.Z);
 
-                gsrTextBlock.Text = String.Format("{0,-10:0.##}", ((double)band.Data.gsr / 1000.0));
+                accelerometerLineGraphCanvas.UpdateValues(new double[]
+                {
+                    BandData.accelerometer.X,
+                    BandData.accelerometer.Y,
+                    BandData.accelerometer.Z,
+                });
 
-                accelerometerValueX.Text = String.Format("X : {0:0.###}", band.Data.accelerometer.X);
-                accelerometerValueY.Text = String.Format("Y : {0:0.###}", band.Data.accelerometer.Y);
-                accelerometerValueZ.Text = String.Format("Z : {0:0.###}", band.Data.accelerometer.Z);
-
-                accelerometerLineGraph[0].UpdateGraph(band.Data.accelerometer.X);
-                accelerometerLineGraph[1].UpdateGraph(band.Data.accelerometer.Y);
-                accelerometerLineGraph[2].UpdateGraph(band.Data.accelerometer.Z);
-
-                gyroscopeValueX.Text = String.Format("X : {0:0.###}", band.Data.gyroscopeAngVel.X);
-                gyroscopeValueY.Text = String.Format("Y : {0:0.###}", band.Data.gyroscopeAngVel.Y);
-                gyroscopeValueZ.Text = String.Format("Z : {0:0.###}", band.Data.gyroscopeAngVel.Z);
-
-                gyroscopeLineGraph[0].UpdateGraph(band.Data.gyroscopeAngVel.X);
-                gyroscopeLineGraph[1].UpdateGraph(band.Data.gyroscopeAngVel.Y);
-                gyroscopeLineGraph[2].UpdateGraph(band.Data.gyroscopeAngVel.Z);
+                gyroscopeLineGraphCanvas.UpdateValues(new double[] 
+                {
+                    BandData.gyroscopeAngVel.X,
+                    BandData.gyroscopeAngVel.Y,
+                    BandData.gyroscopeAngVel.Z,
+                });
 
                 if (band.IsWorn)
                 {
@@ -121,8 +162,10 @@ namespace Niuware.MSBandViewer.Views
                 }
                 else
                 {
-                    gyroscopeGraphCanvas.Children.Clear();
-                    accelerometerGraphCanvas.Children.Clear();
+                    gyroscopeLineGraphCanvas.Reset();
+                    accelerometerLineGraphCanvas.Reset();
+                    //gyroscopeGraphCanvas.Children.Clear();
+                    //accelerometerGraphCanvas.Children.Clear();
 
                     SetSyncMessage("Waiting for band user...");
                 }
@@ -253,9 +296,11 @@ namespace Niuware.MSBandViewer.Views
             });
         }
 
-        public void UnsuscribeAllSensors(bool unsuscribeContact = false)
+        public void FinalizeAllTasks()
         {
-            band.UnsuscribeSensors(unsuscribeContact);
+            sensorTimer.Stop();
+            timer.Stop();
+            band.UnsuscribeSensors(true, true);
         }
 
         #region Page Commands
@@ -285,13 +330,13 @@ namespace Niuware.MSBandViewer.Views
 
         private void Page_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            accelerometerLineGraph[0].SizeChanged();
-            accelerometerLineGraph[1].SizeChanged();
-            accelerometerLineGraph[2].SizeChanged();
+            //accelerometerLineGraph[0].SizeChanged();
+            //accelerometerLineGraph[1].SizeChanged();
+            //accelerometerLineGraph[2].SizeChanged();
 
-            gyroscopeLineGraph[0].SizeChanged();
-            gyroscopeLineGraph[1].SizeChanged();
-            gyroscopeLineGraph[2].SizeChanged();
+            //gyroscopeLineGraph[0].SizeChanged();
+            //gyroscopeLineGraph[1].SizeChanged();
+            //gyroscopeLineGraph[2].SizeChanged();
         }
 
         #endregion
@@ -300,9 +345,9 @@ namespace Niuware.MSBandViewer.Views
 
         private void syncBandButton_Click(object sender, RoutedEventArgs e)
         {
-            UnsuscribeAllSensors();
+            band.UnsuscribeSensors(true, true);
 
-            SyncBand();
+            //SyncBand();
         }
 
         private async void startOrStopSessionButtton_Click(object sender, RoutedEventArgs e)

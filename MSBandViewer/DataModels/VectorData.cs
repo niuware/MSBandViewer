@@ -1,4 +1,4 @@
-﻿namespace Niuware.MSBandViewer.DataModel
+﻿namespace Niuware.MSBandViewer.DataModels
 {
     public struct VectorData2D<T>
     {

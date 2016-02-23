@@ -96,12 +96,14 @@ namespace Niuware.MSBandViewer
             // Unsuscribe all sensors
             if (AppShell.Current.AppFrame.Content.GetType() == typeof(LandingView))
             {
-                (AppShell.Current.AppFrame.Content as LandingView).UnsuscribeAllSensors(true);
+                (AppShell.Current.AppFrame.Content as LandingView).FinalizeAllTasks();
             }
 
-            var deferral = e.SuspendingOperation.GetDeferral();
+            //var deferral = e.SuspendingOperation.GetDeferral();
+
             //TODO: Save application state and stop any background activity
-            deferral.Complete();
+
+            //deferral.Complete();
         }
     }
 }

@@ -1,8 +1,8 @@
-﻿using Niuware.MSBandViewer.DataModel;
+﻿using Niuware.MSBandViewer.DataModels;
 
 namespace Niuware.MSBandViewer.Sensor
 {
-    class SensorData
+    public class SensorData
     {
         public int heartRate = 0;
         public double rrInterval;

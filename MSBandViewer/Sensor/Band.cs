@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.Band;
 using Microsoft.Band.Sensors;
 using Microsoft.Band.Personalization;
+using Niuware.MSBandViewer.DataModels;
 
 namespace Niuware.MSBandViewer.Sensor
 {
@@ -71,43 +72,11 @@ namespace Niuware.MSBandViewer.Sensor
             sessionDataTimer = new Timer(sessionDataTimer_Callback, null, Timeout.Infinite, SessionDataTimerUpdate);
         }
 
-        private void sessionDataTimer_Callback(object state)
-        {
-            DateTime currentTime = 
-                new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute, DateTime.Now.Second);
-
-            if (!sessionData.ContainsKey(currentTime))
-            {
-                data.contact = isWorn;
-                sessionData.Add(currentTime, data.Copy());
-            }
-        }
-
-        public void StartSession()
-        {
-            sessionInProgress = true;
-
-            ClearSession();
-            sessionDataTimer.Change(0, SessionDataTimerUpdate);
-        }
-
-        public void EndSession(bool clear = false)
-        {
-            sessionInProgress = false;
-
-            sessionDataTimer.Change(Timeout.Infinite, SessionDataTimerUpdate);
-
-            if (clear)
-            {
-                ClearSession();
-            }
-        }
-
-        public void ClearSession()
-        {
-            sessionData.Clear();
-        }
-
+        /// <summary>
+        /// Connect to the band
+        /// </summary>
+        /// <param name="bandIndex">The band id. 0 is the first paired band found on the system</param>
+        /// <returns></returns>
         public async Task SyncBand(int bandIndex = 0)
         {
             pairedBandIndex = bandIndex;
@@ -148,6 +117,53 @@ namespace Niuware.MSBandViewer.Sensor
             }
         }
 
+        #region Save session
+
+        private void sessionDataTimer_Callback(object state)
+        {
+            DateTime currentTime =
+                new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute, DateTime.Now.Second);
+
+            if (!sessionData.ContainsKey(currentTime))
+            {
+                data.contact = isWorn;
+                sessionData.Add(currentTime, data.Copy());
+            }
+        }
+
+        public void StartSession()
+        {
+            sessionInProgress = true;
+
+            ClearSession();
+            sessionDataTimer.Change(0, SessionDataTimerUpdate);
+        }
+
+        public void EndSession(bool clear = false)
+        {
+            sessionInProgress = false;
+
+            sessionDataTimer.Change(Timeout.Infinite, SessionDataTimerUpdate);
+
+            if (clear)
+            {
+                ClearSession();
+            }
+        }
+
+        public void ClearSession()
+        {
+            sessionData.Clear();
+        }
+
+        #endregion
+
+        #region Sensor suscribing
+
+        /// <summary>
+        /// Suscribe all sensors asynchronously
+        /// </summary>
+        /// <returns></returns>
         public async Task SuscribeSensors()
         {
             // Contact sensor
@@ -174,13 +190,15 @@ namespace Niuware.MSBandViewer.Sensor
             // Get band info
             SuscribeBandInfo();
 
+            // Give the user feedback the sensor suscribing has finished
             await bandClient.NotificationManager.VibrateAsync(Microsoft.Band.Notifications.VibrationType.NotificationOneTone);
         }
 
         /// <summary>
-        /// Unsuscribe all sensor reading events and stop its reading
+        /// Unsuscribe all sensors and remove their events
         /// </summary>
         /// <param name="unsuscribeContact">If there is no need to know if the user is wearing the band anymore, then unscribe contact sensor too</param>
+        /// <param name="updateStatus">Update the band sync status</param>
         public void UnsuscribeSensors(bool unsuscribeContact = false, bool updateStatus = false)
         {
             if (updateStatus)
@@ -301,6 +319,10 @@ namespace Niuware.MSBandViewer.Sensor
             await bandClient.SensorManager.RRInterval.StartReadingsAsync();
         }
 
+        #endregion
+
+        #region Sensor events
+
         private void Contact_ReadingChanged(object sender, BandSensorReadingEventArgs<IBandContactReading> e)
         {
             IBandContactReading contactRead = e.SensorReading;
@@ -341,7 +363,7 @@ namespace Niuware.MSBandViewer.Sensor
         {
             IBandAccelerometerReading accelerometerRead = e.SensorReading;
 
-            data.accelerometer = new DataModel.VectorData3D<double>()
+            data.accelerometer = new VectorData3D<double>()
             {
                 X = accelerometerRead.AccelerationX,
                 Y = accelerometerRead.AccelerationY,
@@ -353,12 +375,14 @@ namespace Niuware.MSBandViewer.Sensor
         {
             IBandGyroscopeReading gyroscropeRead = e.SensorReading;
 
-            data.gyroscopeAngVel = new DataModel.VectorData3D<double>()
+            data.gyroscopeAngVel = new VectorData3D<double>()
             {
                 X = gyroscropeRead.AngularVelocityX,
                 Y = gyroscropeRead.AngularVelocityY,
                 Z = gyroscropeRead.AngularVelocityZ
             };
         }
+
+        #endregion
     }
 }

@@ -111,8 +111,6 @@
     <Style x:Key="GraphDetailStackPanelStyle" TargetType="StackPanel">
         <Setter Property="Background" Value="{StaticResource GraphDetailStackPanelBackgroundBrush}" />
         <Setter Property="Padding" Value="10" />
-        <Setter Property="Width" Value="300" />
-        <Setter Property="Height" Value="140" />
     </Style>
 
     <ControlTemplate x:Key="SplitViewPaneMenuButtonTemplate" TargetType="Button">
