@@ -1,7 +1,7 @@
 ﻿using System;
 using Windows.UI.Xaml.Controls;
 
-namespace Niuware.MSBandViewer
+namespace Niuware.MSBandViewer.DataModels
 {
     public class NavMenuItem
     {

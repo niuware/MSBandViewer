@@ -17,6 +17,7 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using Niuware.MSBandViewer.Controls;
 using Niuware.MSBandViewer.Views;
+using Niuware.MSBandViewer.DataModels;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -40,11 +41,13 @@ namespace Niuware.MSBandViewer
                 {
                     Symbol = Symbol.Setting,
                     Label = "Settings",
-                    //DestPage = typeof(LandingView)
+                    DestPage = typeof(Settings)
                 }
             });
 
         public static AppShell Current = null;
+
+        public string LastView { get; set; }
 
         public AppShell()
         {

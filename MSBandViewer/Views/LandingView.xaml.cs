@@ -199,6 +199,7 @@ namespace Niuware.MSBandViewer.Views
 
             syncGrid.Visibility = Visibility.Collapsed;
             commandBar.IsEnabled = true;
+            commandBar.IsOpen = true;
         }
 
         private void UpdateBandBackgroundImage()
@@ -370,7 +371,7 @@ namespace Niuware.MSBandViewer.Views
             }
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void MenuPaneButton_Click(object sender, RoutedEventArgs e)
         {
             AppShell.Current.RemoteCheckTogglePaneButton();
         }

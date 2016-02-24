@@ -106,12 +106,15 @@
     <Compile Include="Converters\LineGraphLabelConverter.cs" />
     <Compile Include="Converters\TemperatureToStringConverter.cs" />
     <Compile Include="DataModels\VectorData.cs" />
-    <Compile Include="NavMenuItem.cs" />
+    <Compile Include="DataModels\NavMenuItem.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Sensor\Band.cs" />
     <Compile Include="Sensor\SensorData.cs" />
     <Compile Include="Views\LandingView.xaml.cs">
       <DependentUpon>LandingView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Settings.xaml.cs">
+      <DependentUpon>Settings.xaml</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>
@@ -150,6 +153,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Page>
     <Page Include="Views\LandingView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\Settings.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
