@@ -8,7 +8,6 @@ using Microsoft.Band;
 using Microsoft.Band.Sensors;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
-using Niuware.MSBandViewer.DataModels;
 using Niuware.MSBandViewer.Sensor;
 using System.Collections.Generic;
 using Windows.Storage;
@@ -30,7 +29,7 @@ namespace Niuware.MSBandViewer.Views
             set { minHeartBpm = value; NotifyPropertyChanged("MinHeartBpm"); }
         }
 
-        DispatcherTimer timer, sensorTimer;
+        DispatcherTimer clockTimer, sensorTimer;
 
         Band band;
 
@@ -59,10 +58,10 @@ namespace Niuware.MSBandViewer.Views
 
             MinHeartBpm = 250;
 
-            timer = new DispatcherTimer();
-            timer.Interval = new TimeSpan(0, 0, 1);
-            timer.Tick += Timer_Tick;
-            timer.Start();
+            clockTimer = new DispatcherTimer();
+            clockTimer.Interval = new TimeSpan(0, 0, 1);
+            clockTimer.Tick += ClockTimer_Tick;
+            clockTimer.Start();
 
             sensorTimer = new DispatcherTimer();
             sensorTimer.Interval = new TimeSpan(0, 0, 0, 0, 10);
@@ -74,14 +73,14 @@ namespace Niuware.MSBandViewer.Views
             band = new Band();
 
             accelerometerLineGraphCanvas.Label = "Accelerometer";
-            accelerometerLineGraphCanvas.AddLineGraph(new SolidColorBrush(Windows.UI.Colors.White), 0.0, 10.0, 2.5, "X");
-            accelerometerLineGraphCanvas.AddLineGraph((SolidColorBrush)Resources["SystemControlHighlightAccentBrush"], -10.0, 10.0, 2.5, "Y");
-            accelerometerLineGraphCanvas.AddLineGraph(new SolidColorBrush(Windows.UI.Colors.Gray), 10.0, 10.0, 2.5, "Z");
+            accelerometerLineGraphCanvas.AddLineGraph(0.0, "X", new SolidColorBrush(Windows.UI.Colors.White));
+            accelerometerLineGraphCanvas.AddLineGraph(-10.0, "Y", (SolidColorBrush)Resources["SystemControlHighlightAccentBrush"]);
+            accelerometerLineGraphCanvas.AddLineGraph(10.0, "Z", new SolidColorBrush(Windows.UI.Colors.Gray));
 
             gyroscopeLineGraphCanvas.Label = "Gyroscope (angular vel.)";
-            gyroscopeLineGraphCanvas.AddLineGraph(new SolidColorBrush(Windows.UI.Colors.White), 0.0, 10.0, 0.15, "X");
-            gyroscopeLineGraphCanvas.AddLineGraph((SolidColorBrush)Resources["SystemControlHighlightAccentBrush"], -10.0, 10.0, 0.15, "Y");
-            gyroscopeLineGraphCanvas.AddLineGraph(new SolidColorBrush(Windows.UI.Colors.Gray), 10.0, 10.0, 0.15, "Z");
+            gyroscopeLineGraphCanvas.AddLineGraph(0.0, "X", new SolidColorBrush(Windows.UI.Colors.White));
+            gyroscopeLineGraphCanvas.AddLineGraph(-10.0, "Y", (SolidColorBrush)Resources["SystemControlHighlightAccentBrush"]);
+            gyroscopeLineGraphCanvas.AddLineGraph(10.0, "Z", new SolidColorBrush(Windows.UI.Colors.Gray));
         }
 
         private async void SensorTimer_Tick(object sender, object e)
@@ -145,7 +144,7 @@ namespace Niuware.MSBandViewer.Views
             });
         }
 
-        private async void Timer_Tick(object sender, object e)
+        private async void ClockTimer_Tick(object sender, object e)
         {
             await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { msBandClockTextBlock.Text = DateTime.Now.ToString("h:mm"); });
             await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { msBandDayStringTextBlock.Text = DateTime.Now.ToString("ddd"); });
@@ -272,7 +271,7 @@ namespace Niuware.MSBandViewer.Views
         public void FinalizeAllTasks()
         {
             sensorTimer.Stop();
-            timer.Stop();
+            clockTimer.Stop();
             band.UnsuscribeSensors(true, true);
         }
 

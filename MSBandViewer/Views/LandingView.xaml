@@ -146,8 +146,8 @@
                         <ColumnDefinition Width=".2*" />
                         <ColumnDefinition Width=".2*" />
                     </Grid.ColumnDefinitions>
-                    <controls:LineGraphCanvas x:Name="accelerometerLineGraphCanvas" Grid.Column="0" />
-                    <controls:LineGraphCanvas x:Name="gyroscopeLineGraphCanvas" Grid.Column="1" />
+                    <controls:LineGraphCanvas x:Name="accelerometerLineGraphCanvas" Grid.Column="0" XScale="10.0" YScale="2.5" />
+                    <controls:LineGraphCanvas x:Name="gyroscopeLineGraphCanvas" Grid.Column="1" XScale="10.0" YScale="0.15" />
                 </Grid>
             </Grid>
         </Grid>
