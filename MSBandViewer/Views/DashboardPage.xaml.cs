@@ -14,7 +14,7 @@ using Windows.Storage;
 
 namespace Niuware.MSBandViewer.Views
 {
-    public sealed partial class LandingView : Page, INotifyPropertyChanged
+    public sealed partial class DashboardPage : Page, INotifyPropertyChanged
     {
         int maxHeartBpm;
         public int MaxHeartBpm
@@ -52,7 +52,7 @@ namespace Niuware.MSBandViewer.Views
             }
         }
 
-        public LandingView()
+        public DashboardPage()
         {
             this.InitializeComponent();
 

@@ -35,13 +35,13 @@ namespace Niuware.MSBandViewer
                 {
                     Symbol = Symbol.Home,
                     Label = "Dashboard",
-                    DestPage = typeof(LandingView)
+                    DestPage = typeof(DashboardPage)
                 },
                 new NavMenuItem()
                 {
                     Symbol = Symbol.Setting,
                     Label = "Settings",
-                    DestPage = typeof(Settings)
+                    DestPage = typeof(SettingsPage)
                 }
             });
 

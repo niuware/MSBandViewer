@@ -19,7 +19,7 @@ namespace Niuware.MSBandViewer.Views
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class Settings : Page
+    public sealed partial class SettingsPage : Page
     {
         enum FileSeparator
         {
@@ -31,7 +31,7 @@ namespace Niuware.MSBandViewer.Views
 
         ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
 
-        public Settings()
+        public SettingsPage()
         {
             this.InitializeComponent();
         }

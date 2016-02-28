@@ -92,6 +92,10 @@ namespace Niuware.MSBandViewer.Sensor
                 }
                 else
                 {
+                    string[] bandName = pairedBands[pairedBandIndex].Name.Split(':');
+
+                    BandName = bandName[0].Remove(bandName[0].LastIndexOf(' '));
+
                     bandClient = await BandClientManager.Instance.ConnectAsync(pairedBands[pairedBandIndex]);
 
                     status = BandSyncStatus.SYNCED;
@@ -236,10 +240,6 @@ namespace Niuware.MSBandViewer.Sensor
 
         private async void SuscribeBandInfo()
         {
-            string[] bandName = pairedBands[pairedBandIndex].Name.Split(':');
-
-            BandName = bandName[0].Remove(bandName[0].LastIndexOf(' '));
-
             // Get Me Tile image
             BandBackgroundImage = await bandClient.PersonalizationManager.GetMeTileImageAsync();
         }
