@@ -1,7 +1,7 @@
 ﻿using Microsoft.Band;
 using Microsoft.Band.Sensors;
 using Niuware.MSBandViewer.Helpers;
-using Niuware.MSBandViewer.Sensor;
+using Niuware.MSBandViewer.MSBand;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -309,6 +309,16 @@ namespace Niuware.MSBandViewer.Views
             band.UnsuscribeSensors(true, true, dispose);
         }
 
+        public bool IsUnloadActive()
+        {
+            if (band.Status == BandSyncStatus.UNKNOWN || band.Status == BandSyncStatus.SYNCED_SUSCRIBING)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
         #region Page Commands
 
         private void CommandInvokedHandler(IUICommand command)
@@ -442,11 +452,6 @@ namespace Niuware.MSBandViewer.Views
             UpdateUI();
 
             saveSessionButton.IsEnabled = false;
-        }
-
-        private void MenuPaneButton_Click(object sender, RoutedEventArgs e)
-        {
-            AppShell.Current.RemoteCheckTogglePaneButton();
         }
 
         #endregion

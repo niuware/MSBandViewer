@@ -20,7 +20,7 @@
             <RowDefinition />
         </Grid.RowDefinitions>
         <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Top" Background="{ThemeResource SystemControlBackgroundChromeMediumBrush}" HorizontalAlignment="Stretch">
-            <Button Template="{StaticResource SplitViewContentMenuButtonTemplate}" Click="MenuPaneButton_Click" />
+            <Button Template="{StaticResource SplitViewContentMenuButtonTemplate}" />
             <TextBlock x:Name="pageTitle" FontSize="24" Margin="10 0 0 0" VerticalAlignment="Center">Settings</TextBlock>
         </StackPanel>
         <Grid Grid.Row="1" Padding="20">
@@ -96,6 +96,7 @@
                 <StackPanel Grid.Row="7" Grid.Column="1" Orientation="Horizontal">
                     <TextBlock x:Name="sessionDataPathTextBlock" TextTrimming="CharacterEllipsis" MaxWidth="250" Text="{x:Bind Path=Settings.sessionDataPath,Mode=TwoWay}"></TextBlock>
                     <Button x:Name="changeSessionDataPathButton" Click="changeSessionDataPathButton_Click">Change</Button>
+                    <Button x:Name="resetSessionDataPathButton" Click="resetSessionDataPathButton_Click" Margin="15 0 0 0">Reset</Button>
                 </StackPanel>
             </Grid>
         </Grid>

@@ -38,11 +38,11 @@ namespace Niuware.MSBandViewer.Views
 
         #region Page Control Events
 
-        private void MenuPaneButton_Click(object sender, RoutedEventArgs e)
-        {
-            AppShell.Current.RemoteCheckTogglePaneButton();
-        }
-
+        /// <summary>
+        /// Open Windows BT settings
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private async void pairNowButton_Click(object sender, RoutedEventArgs e)
         {
             await Windows.System.Launcher.LaunchUriAsync(new Uri("ms-settings:bluetooth"));
@@ -70,6 +70,15 @@ namespace Niuware.MSBandViewer.Views
                     settings.UpdateValue("MSBandViewer-sessionDataPath", settings.Data.sessionDataPath);
                 }
             }
+        }
+
+        private void resetSessionDataPathButton_Click(object sender, RoutedEventArgs e)
+        {
+            settings.UpdateValue("MSBandViewer-sessionDataPathToken", "");
+            settings.Data.sessionDataPathToken = "";
+
+            settings.Data.sessionDataPath = sessionDataPathTextBlock.Text = ApplicationData.Current.LocalFolder.Path;
+            settings.UpdateValue("MSBandViewer-sessionDataPath", settings.Data.sessionDataPath);
         }
 
         private void separatorComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)

@@ -1,7 +1,10 @@
 ﻿using Niuware.MSBandViewer.DataModels;
 
-namespace Niuware.MSBandViewer.Sensor
+namespace Niuware.MSBandViewer.MSBand
 {
+    /// <summary>
+    /// Contains all sensor data
+    /// </summary>
     public class SensorData
     {
         public int heartRate = 0;
@@ -13,14 +16,6 @@ namespace Niuware.MSBandViewer.Sensor
         public bool contact;
 
         public SensorData() { }
-
-        public override string ToString()
-        {
-            return heartRate.ToString() + "," + rrInterval + "," + gsr.ToString() + "," + temperature + "," + 
-                accelerometer.X + "," + accelerometer.Y + "," + accelerometer.Z + "," +
-                gyroscopeAngVel.X + "," + gyroscopeAngVel.Y + "," + gyroscopeAngVel.Z + "," +
-                contact;
-        }
 
         public string Output(string separator = ",")
         {

@@ -33,8 +33,6 @@ namespace Niuware.MSBandViewer.Controls
         public double YScale { get; set; }
         public string Label { get; set; }
 
-        int drawLoopCount;
-
         public event PropertyChangedEventHandler PropertyChanged;
 
         public void NotifyPropertyChanged(string propertyName)

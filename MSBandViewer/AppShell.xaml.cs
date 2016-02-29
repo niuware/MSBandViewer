@@ -55,6 +55,8 @@ namespace Niuware.MSBandViewer
                     this.CheckTogglePaneButtonSizeChanged();
                 });
 
+            this.RootSplitView.RegisterPropertyChangedCallback(SplitView.IsPaneOpenProperty, IsPaneOpenPropertyChanged);
+
             SystemNavigationManager.GetForCurrentView().BackRequested += SystemNavigationManager_BackRequested;
 
             NavMenuList.ItemsSource = navlist;
@@ -70,6 +72,19 @@ namespace Niuware.MSBandViewer
             if (!e.Handled && this.AppFrame.CanGoBack)
             {
                 e.Handled = true;
+
+                // We prevent going back if async operations of the band are still
+                // in process
+                if (AppFrame.Content.GetType() == typeof(DashboardPage))
+                {
+                    if (!(this.AppFrame.Content as DashboardPage).IsUnloadActive())
+                    {
+                        UpdateNavMenuList();
+
+                        return;
+                    }
+                }
+
                 this.AppFrame.GoBack();
             }
         }
@@ -108,6 +123,7 @@ namespace Niuware.MSBandViewer
             if (e.NavigationMode == NavigationMode.Back)
             {
                 var item = (from p in this.navlist where p.DestPage == e.SourcePageType select p).SingleOrDefault();
+
                 if (item == null && this.AppFrame.BackStackDepth > 0)
                 {
                     // In cases where a page drills into sub-pages then we'll highlight the most recent
@@ -179,11 +195,6 @@ namespace Niuware.MSBandViewer
             this.CheckTogglePaneButtonSizeChanged();
         }
 
-        public void RemoteCheckTogglePaneButton()
-        {
-            this.CheckTogglePaneButtonSizeChanged();
-        }
-
         /// <summary>
         /// Check for the conditions where the navigation pane does not occupy the space under the floating
         /// hamburger button and trigger the event.
@@ -225,6 +236,56 @@ namespace Niuware.MSBandViewer
             else
             {
                 args.ItemContainer.ClearValue(AutomationProperties.NameProperty);
+            }
+
+            UpdateNavMenuList();
+        }
+
+        private void IsPaneOpenPropertyChanged(DependencyObject sender, DependencyProperty dp)
+        {
+            UpdateNavMenuList();
+        }
+
+        /// <summary>
+        /// If the Band object has async operations we cannot dispose it, so we disable the option to change the current page
+        /// until all async operations are done
+        /// </summary>
+        private void UpdateNavMenuList()
+        {
+            if (AppFrame.Content.GetType() == typeof(DashboardPage))
+            {
+                var items = (from p in this.navlist where p.DestPage != typeof(DashboardPage) select p);
+
+                if (!(AppFrame.Content as DashboardPage).IsUnloadActive())
+                {
+                    EnableNavMenuItem(items, false);
+                }
+                else
+                {
+                    EnableNavMenuItem(navlist, true);
+                }
+            }
+            else
+            {
+                EnableNavMenuItem(navlist, true);
+            }
+        }
+
+        /// <summary>
+        /// Enable or disable the selected items from the navigation ListView
+        /// </summary>
+        /// <param name="collection">Collection of items to update</param>
+        /// <param name="enable">Enable or disable</param>
+        private void EnableNavMenuItem(IEnumerable<NavMenuItem> collection, bool enable)
+        {
+            foreach (NavMenuItem it in collection)
+            {
+                ListViewItem container = (ListViewItem)NavMenuList.ContainerFromItem(it);
+
+                if (container != null)
+                {
+                    container.IsEnabled = enable;
+                }
             }
         }
     }

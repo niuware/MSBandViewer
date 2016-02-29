@@ -7,8 +7,11 @@ using Microsoft.Band.Sensors;
 using Microsoft.Band.Personalization;
 using Niuware.MSBandViewer.DataModels;
 
-namespace Niuware.MSBandViewer.Sensor
+namespace Niuware.MSBandViewer.MSBand
 {
+    /// <summary>
+    /// Available status for the band
+    /// </summary>
     public enum BandSyncStatus
     {
         NO_PAIR_BAND_FOUND,
@@ -22,9 +25,12 @@ namespace Niuware.MSBandViewer.Sensor
         UNKNOWN
     }
 
+    /// <summary>
+    /// Class to sync, suscribe and read data from the Microsoft Band sensors
+    /// </summary>
     class Band
     {
-        // MSBand interfaces
+        // Microsoft Band interfaces
         IBandInfo[] pairedBands;
         IBandClient bandClient;
 
@@ -37,17 +43,18 @@ namespace Niuware.MSBandViewer.Sensor
         public BandImage BandBackgroundImage { get; private set; }
         public string BandName { get; private set; }
 
-        // Sensor data
+        // MSBand data
         public SensorData Data { get { return data; } }
         SensorData data;
 
-        // Session data
+        // Session data dictionary
         Dictionary<DateTime, SensorData> sessionData;
         public Dictionary<DateTime, SensorData> SessionData { get { return sessionData; } }
 
-        // Session data timer
+        // Session track interval timer
         Timer sessionTrackIntervalTimer;
         public int SessionTrackInterval{ get; set; }
+
         bool sessionInProgress;
         public bool IsSessionInProgress { get { return sessionInProgress; } }
 
@@ -73,6 +80,9 @@ namespace Niuware.MSBandViewer.Sensor
             sessionTrackIntervalTimer = new Timer(sessionTrackIntervalTimer_Callback, null, Timeout.Infinite, SessionTrackInterval);
         }
 
+        /// <summary>
+        /// If we had a previous sync, just reset the status and recycle the same object
+        /// </summary>
         public void Reconnect()
         {
             if (status == BandSyncStatus.SYNCED_TERMINATED)
@@ -82,9 +92,9 @@ namespace Niuware.MSBandViewer.Sensor
         }
 
         /// <summary>
-        /// Connect to the band
+        /// Sync to a band
         /// </summary>
-        /// <param name="bandIndex">The band id. 0 is the first paired band found on the system</param>
+        /// <param name="bandIndex">The band to sync to. '0' is the first paired band found on the system</param>
         /// <returns></returns>
         public async Task SyncBand(int bandIndex = 1)
         {
@@ -92,7 +102,7 @@ namespace Niuware.MSBandViewer.Sensor
 
             try
             {
-                // Get the list of Microsoft Bands paired to the computer.
+                // Get the list of all Microsoft Bands paired to the device
                 pairedBands = await BandClientManager.Instance.GetBandsAsync();
 
                 if (pairedBands.Length < 1)
@@ -103,10 +113,12 @@ namespace Niuware.MSBandViewer.Sensor
                 {
                     pairedBandIndex = (pairedBandIndex >= pairedBands.Length) ? 0 : pairedBandIndex;
 
+                    // Get the band's name with the bluetooth address removed
                     string[] bandName = pairedBands[pairedBandIndex].Name.Split(':');
 
                     BandName = bandName[0].Remove(bandName[0].LastIndexOf(' '));
 
+                    // Connect to the band
                     bandClient = await BandClientManager.Instance.ConnectAsync(pairedBands[pairedBandIndex]);
 
                     status = BandSyncStatus.SYNCED_SUSCRIBING;
@@ -134,6 +146,10 @@ namespace Niuware.MSBandViewer.Sensor
 
         #region Save session
 
+        /// <summary>
+        /// Save the band sensors' data each 'SessionTrackInterval' (value in milliseconds).
+        /// </summary>
+        /// <param name="state"></param>
         private void sessionTrackIntervalTimer_Callback(object state)
         {
             DateTime currentTime =
@@ -146,6 +162,9 @@ namespace Niuware.MSBandViewer.Sensor
             }
         }
 
+        /// <summary>
+        /// Start tracking a new session
+        /// </summary>
         public void StartSession()
         {
             sessionInProgress = true;
@@ -154,6 +173,10 @@ namespace Niuware.MSBandViewer.Sensor
             sessionTrackIntervalTimer.Change(0, SessionTrackInterval);
         }
 
+        /// <summary>
+        /// End the current tracked session
+        /// </summary>
+        /// <param name="clear">Reset the saved session data?</param>
         public void EndSession(bool clear = false)
         {
             sessionInProgress = false;
@@ -166,6 +189,9 @@ namespace Niuware.MSBandViewer.Sensor
             }
         }
 
+        /// <summary>
+        /// Clear the current saved session
+        /// </summary>
         public void ClearSession()
         {
             sessionData.Clear();
@@ -205,7 +231,7 @@ namespace Niuware.MSBandViewer.Sensor
             // Gyroscope
             SuscribeGyroscopeSensor();
 
-            // Give the user feedback the sensor suscribing has finished
+            // Give the user a feedback when the suscribing process has finished
             await bandClient.NotificationManager.VibrateAsync(Microsoft.Band.Notifications.VibrationType.NotificationOneTone);
 
             status = BandSyncStatus.SYNCED;
@@ -216,6 +242,7 @@ namespace Niuware.MSBandViewer.Sensor
         /// </summary>
         /// <param name="unsuscribeContact">If there is no need to know if the user is wearing the band anymore, then unscribe contact sensor too</param>
         /// <param name="updateStatus">Update the band sync status</param>
+        /// <param name="dispose">Dispose the bandclient object</param>
         public void UnsuscribeSensors(bool unsuscribeContact = false, bool updateStatus = false, bool dispose = false)
         {
             if (updateStatus)
@@ -249,6 +276,7 @@ namespace Niuware.MSBandViewer.Sensor
                     bandClient.SensorManager.Contact.StopReadingsAsync();
                 }
 
+                // Necessary to dispose explicitly in case we want to reload the dashboard along an app session
                 if (dispose)
                 {
                     bandClient.Dispose();
@@ -294,6 +322,7 @@ namespace Niuware.MSBandViewer.Sensor
 
         private async Task SuscribeHeartRateSensor()
         {
+            // We need the user consent for using this sensor
             if (bandClient.SensorManager.HeartRate.GetCurrentUserConsent() == UserConsent.Granted)
             {
                 sensorHRUserConsent = true;
@@ -317,6 +346,7 @@ namespace Niuware.MSBandViewer.Sensor
 
         private async void SuscribeRRInterval()
         {
+            // We need the user consent for this sensor. Actually we need the Heart Rate sensor consent only
             if (bandClient.SensorManager.RRInterval.GetCurrentUserConsent() == UserConsent.Granted)
             {
                 sensorRRUserConsent = true;

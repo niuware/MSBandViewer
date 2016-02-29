@@ -33,7 +33,7 @@
             <RowDefinition />
         </Grid.RowDefinitions>
         <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Top" Background="{ThemeResource SystemControlBackgroundChromeMediumBrush}" HorizontalAlignment="Stretch">
-            <Button Template="{StaticResource SplitViewContentMenuButtonTemplate}" Click="MenuPaneButton_Click" />
+            <Button Template="{StaticResource SplitViewContentMenuButtonTemplate}" />
             <TextBlock x:Name="pageTitle" FontSize="24" Margin="10 0 0 0" VerticalAlignment="Center">Dashboard</TextBlock>
         </StackPanel>
         <Grid Grid.Row="1" x:Name="dashboardGrid">

@@ -111,8 +111,8 @@
     <Compile Include="DataModels\NavMenuItem.cs" />
     <Compile Include="Helpers\Settings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Sensor\Band.cs" />
-    <Compile Include="Sensor\SensorData.cs" />
+    <Compile Include="MSBand\Band.cs" />
+    <Compile Include="MSBand\SensorData.cs" />
     <Compile Include="Views\DashboardPage.xaml.cs">
       <DependentUpon>DashboardPage.xaml</DependentUpon>
     </Compile>
