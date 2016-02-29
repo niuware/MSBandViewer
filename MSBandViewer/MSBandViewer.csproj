@@ -102,11 +102,14 @@
       <DependentUpon>LineGraphCanvas.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\NavMenuListView.cs" />
+    <Compile Include="Converters\ComboBoxConverter.cs" />
     <Compile Include="Converters\GsrToStringConverter.cs" />
     <Compile Include="Converters\LineGraphLabelConverter.cs" />
     <Compile Include="Converters\TemperatureToStringConverter.cs" />
+    <Compile Include="DataModels\SettingData.cs" />
     <Compile Include="DataModels\VectorData.cs" />
     <Compile Include="DataModels\NavMenuItem.cs" />
+    <Compile Include="Helpers\Settings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Sensor\Band.cs" />
     <Compile Include="Sensor\SensorData.cs" />

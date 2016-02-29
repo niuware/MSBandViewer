@@ -3,11 +3,17 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Niuware.MSBandViewer.Views"
+    xmlns:converters="using:Niuware.MSBandViewer.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    DataContext="{Binding RelativeSource={RelativeSource Self}}"
     mc:Ignorable="d"
 >
 
+    <Page.Resources>
+        <converters:ComboBoxConverter x:Key="ComboBoxConverter" />
+    </Page.Resources>
+    
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="48" />
@@ -57,7 +63,10 @@
                 </Grid.RowDefinitions>
                 <TextBlock FontSize="22" Grid.Row="0" Grid.ColumnSpan="2" Margin="0 0 0 10">Sensor</TextBlock>
                 <TextBlock Grid.Row="1" Grid.Column="0">Paired device</TextBlock>
-                <ComboBox Grid.Row="1" Grid.Column="1" PlaceholderText="Pick an index" ToolTipService.ToolTip="If you have more than one Microsoft Band paired with this device, choose the one to which you want to sync." ToolTipService.Placement="Right">
+                <ComboBox x:Name="pairedIndexComboBox" Grid.Row="1" Grid.Column="1" PlaceholderText="Pick an index" 
+                          ToolTipService.ToolTip="If you have more than one Microsoft Band paired with this device, choose the one to which you want to sync." 
+                          ToolTipService.Placement="Right" SelectedValue="{x:Bind Path=Settings.pairedIndex,Mode=TwoWay,Converter={StaticResource ComboBoxConverter}}"
+                          SelectionChanged="pairedIndexComboBox_SelectionChanged">
                     <x:Int32>1</x:Int32>
                     <x:Int32>2</x:Int32>
                     <x:Int32>3</x:Int32>
@@ -67,14 +76,16 @@
                 </ComboBox>
                 <Button x:Name="pairNowButton" Grid.Row="2" Grid.Column="0" Click="pairNowButton_Click">Pair now</Button>
                 <TextBlock FontSize="22" Grid.Row="3" Grid.ColumnSpan="2" Margin="0 15 0 15">Session recording</TextBlock>
-                <TextBlock Grid.Row="4" Grid.Column="0">Register time</TextBlock>
+                <TextBlock Grid.Row="4" Grid.Column="0">Tracking interval</TextBlock>
                 <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal">
-                    <Slider x:Name="slider" Minimum="50" Maximum="1500" StepFrequency="50" TickFrequency="50" Width="300" TickPlacement="Outside"></Slider>
+                    <Slider x:Name="slider" Minimum="50" Maximum="1500" StepFrequency="50" TickFrequency="50" Width="300" 
+                            TickPlacement="Outside" Value="{x:Bind Path=Settings.sessionTrackInterval,Mode=TwoWay}"/>
                     <TextBlock Margin="10 0 0 0"><Run Text="{x:Bind Path=slider.Value,Mode=OneWay}"></Run> ms</TextBlock>
                 </StackPanel>
                 <TextBlock FontSize="22" Grid.Row="5" Grid.ColumnSpan="2" Margin="0 15 0 15">File export</TextBlock>
                 <TextBlock Grid.Row="6" Grid.Column="0">Column separator</TextBlock>
-                <ComboBox Grid.Row="6" Grid.Column="1" PlaceholderText="Pick a separator">
+                <ComboBox x:Name="separatorComboBox" Grid.Row="6" Grid.Column="1" PlaceholderText="Pick a separator"
+                          SelectionChanged="separatorComboBox_SelectionChanged" SelectedValue="{x:Bind Path=Settings.fileSeparator,Mode=TwoWay}">
                     <x:String>Comma</x:String>
                     <x:String>Tab</x:String>
                     <x:String>Semicolon</x:String>
@@ -82,8 +93,8 @@
                 </ComboBox>
                 <TextBlock Grid.Row="7" Grid.Column="0">Default path</TextBlock>
                 <StackPanel Grid.Row="7" Grid.Column="1" Orientation="Horizontal">
-                    <TextBlock TextTrimming="CharacterEllipsis" MaxWidth="250"></TextBlock>
-                    <Button>Change</Button>
+                    <TextBlock x:Name="sessionDataPathTextBlock" TextTrimming="CharacterEllipsis" MaxWidth="250" Text="{x:Bind Path=Settings.sessionDataPath,Mode=TwoWay}"></TextBlock>
+                    <Button x:Name="changeSessionDataPathButton" Click="changeSessionDataPathButton_Click">Change</Button>
                 </StackPanel>
             </Grid>
         </Grid>

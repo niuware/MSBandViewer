@@ -42,16 +42,6 @@ namespace Niuware.MSBandViewer.Views
             }
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        public void NotifyPropertyChanged(string propertyName)
-        {
-            if (PropertyChanged != null)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-            }
-        }
-
         public DashboardPage()
         {
             this.InitializeComponent();
@@ -374,6 +364,20 @@ namespace Niuware.MSBandViewer.Views
         private void MenuPaneButton_Click(object sender, RoutedEventArgs e)
         {
             AppShell.Current.RemoteCheckTogglePaneButton();
+        }
+
+        #endregion
+
+        #region INotifyPropertyChanged 
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public void NotifyPropertyChanged(string propertyName)
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
         }
 
         #endregion
