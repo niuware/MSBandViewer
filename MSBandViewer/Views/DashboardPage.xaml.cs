@@ -63,7 +63,7 @@ namespace Niuware.MSBandViewer.Views
             sensorTimer.Tick += SensorTimer_Tick;
 
             heartRateStoryboard.Begin();
-            heartRateStoryboard.Pause();
+            //heartRateStoryboard.Pause();
 
             band = new Band()
             {
@@ -109,9 +109,14 @@ namespace Niuware.MSBandViewer.Views
             }
         }
 
+        /// <summary>
+        /// "Drawing loop" for all the controls, graphics, etc.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private async void SensorTimer_Tick(object sender, object e)
         {
-            if (band.Status == BandSyncStatus.SYNCED_TERMINATED)
+            if (band.Status == BandSyncStatus.SYNCED_TERMINATED || band.Status == BandSyncStatus.SYNCED_SUSCRIBING)
             {
                 return;
             }
@@ -130,7 +135,6 @@ namespace Niuware.MSBandViewer.Views
 
                 if (band.HeartRateLocked == HeartRateQuality.Locked)
                 {
-                    heartRateStoryboard.Resume();
                     heartRatePath.Fill = new SolidColorBrush(Windows.UI.Colors.White);
 
                     // Update heart beat animation according to the real heart rate
@@ -139,7 +143,7 @@ namespace Niuware.MSBandViewer.Views
                 else
                 {
                     heartRatePath.Fill = new SolidColorBrush(Windows.UI.Colors.Transparent);
-                    heartRateStoryboard.Pause();
+                    heartRateStoryboard.SpeedRatio = 1.0;
                 }
 
                 accelerometerLineGraphCanvas.UpdateValues(new double[]
@@ -280,7 +284,7 @@ namespace Niuware.MSBandViewer.Views
                 }
                 else
                 {
-                    if (band.Status == BandSyncStatus.SYNCED)
+                    if (band.Status == BandSyncStatus.SYNCED_SUSCRIBING)
                     {
                         StartDashboard();
                     }
@@ -298,11 +302,11 @@ namespace Niuware.MSBandViewer.Views
             });
         }
 
-        public void FinalizeAllTasks()
+        public void FinalizeAllTasks(bool dispose = false)
         {
             sensorTimer.Stop();
             clockTimer.Stop();
-            band.UnsuscribeSensors(true, true);
+            band.UnsuscribeSensors(true, true, dispose);
         }
 
         #region Page Commands
@@ -327,6 +331,11 @@ namespace Niuware.MSBandViewer.Views
             SyncBand();
         }
 
+        private void Page_Unloaded(object sender, RoutedEventArgs e)
+        {
+            FinalizeAllTasks(true);
+        }
+
         #endregion
 
         #region Page Control Events
@@ -339,7 +348,7 @@ namespace Niuware.MSBandViewer.Views
 
                 UpdateUI();
 
-                SetSyncMessage("Session terminated by user.", false);
+                SetSyncMessage("Your band has been unsynced.", false);
             }
             else 
             {

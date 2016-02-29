@@ -8,6 +8,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Loaded="Page_Loaded" 
+    Unloaded="Page_Unloaded"
     DataContext="{Binding RelativeSource={RelativeSource Self}}"
     mc:Ignorable="d"
 >
@@ -53,7 +54,7 @@
                             <Grid>
                                 <Image Source="../Assets/msband.png" Width="320" Height="160" HorizontalAlignment="Left" />
                                 <Image x:Name="msBandMeTileImage" Margin="0,74,7,31" Width="150" MinWidth="150" Height="58" Stretch="UniformToFill" />
-                                <TextBlock x:Name="msBandRecordTextBlock" Margin="88,79,34,0" FontSize="12" Text="● rec" Visibility="Collapsed">
+                                <TextBlock x:Name="msBandRecordTextBlock" Margin="88,79,34,0" FontSize="12" Text="● recording" Visibility="Collapsed">
                                     <TextBlock.Projection>
                                         <PlaneProjection RotationX="1.271" RotationY="0.065" RotationZ="-2.087"/>
                                     </TextBlock.Projection>

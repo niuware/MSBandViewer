@@ -16,6 +16,7 @@ namespace Niuware.MSBandViewer.Sensor
         BAND_IO_EXCEPTION,
         SYNC_ERROR,
         SYNCED,
+        SYNCED_SUSCRIBING,
         SYNCED_LIMITED_ACCESS,
         SYNCED_TERMINATED,
         UNKNOWN
@@ -76,7 +77,7 @@ namespace Niuware.MSBandViewer.Sensor
         {
             if (status == BandSyncStatus.SYNCED_TERMINATED)
             {
-                status = BandSyncStatus.SYNCED;
+                status = BandSyncStatus.SYNCED_SUSCRIBING;
             }
         }
 
@@ -108,7 +109,7 @@ namespace Niuware.MSBandViewer.Sensor
 
                     bandClient = await BandClientManager.Instance.ConnectAsync(pairedBands[pairedBandIndex]);
 
-                    status = BandSyncStatus.SYNCED;
+                    status = BandSyncStatus.SYNCED_SUSCRIBING;
                 }
             }
             catch (BandAccessDeniedException)
@@ -206,6 +207,8 @@ namespace Niuware.MSBandViewer.Sensor
 
             // Give the user feedback the sensor suscribing has finished
             await bandClient.NotificationManager.VibrateAsync(Microsoft.Band.Notifications.VibrationType.NotificationOneTone);
+
+            status = BandSyncStatus.SYNCED;
         }
 
         /// <summary>
@@ -213,7 +216,7 @@ namespace Niuware.MSBandViewer.Sensor
         /// </summary>
         /// <param name="unsuscribeContact">If there is no need to know if the user is wearing the band anymore, then unscribe contact sensor too</param>
         /// <param name="updateStatus">Update the band sync status</param>
-        public void UnsuscribeSensors(bool unsuscribeContact = false, bool updateStatus = false)
+        public void UnsuscribeSensors(bool unsuscribeContact = false, bool updateStatus = false, bool dispose = false)
         {
             if (updateStatus)
             {
@@ -244,6 +247,11 @@ namespace Niuware.MSBandViewer.Sensor
                 {
                     bandClient.SensorManager.Contact.ReadingChanged -= Contact_ReadingChanged;
                     bandClient.SensorManager.Contact.StopReadingsAsync();
+                }
+
+                if (dispose)
+                {
+                    bandClient.Dispose();
                 }
             }
         }
