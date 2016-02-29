@@ -10,12 +10,10 @@ using Niuware.MSBandViewer.Helpers;
 namespace Niuware.MSBandViewer.Views
 {
     /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
+    /// Page for adjusting the app settings
     /// </summary>
     public sealed partial class SettingsPage : Page, INotifyPropertyChanged
     {
-        //ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
-
         Settings settings;
         public SettingData Settings
         {
@@ -33,74 +31,12 @@ namespace Niuware.MSBandViewer.Views
 
             settings = new Settings();
 
-            //LoadSettings();
-
             // We add the value changed event after loading the previously saved values, if not this event will be triggered when loading the xaml
             // and the value will always be the one set as the slider minimum property
             slider.ValueChanged += slider_ValueChanged;
         }
 
-        //private void CreateSettingsIfNotExist()
-        //{
-        //    try
-        //    {
-        //        int obj = (int)localSettings.Values["MSBandViewer-pairedIndex"];
-        //    }
-        //    catch
-        //    {
-        //        // Settings don't exist yet.
-        //        SetDefaultSettings();
-        //    }
-        //}
-
-        //private void SetDefaultSettings()
-        //{
-        //    localSettings.Values["MSBandViewer-pairedIndex"] = 1;
-        //    localSettings.Values["MSBandViewer-sessionTrackInterval"] = 500.0;
-        //    localSettings.Values["MSBandViewer-fileSeparator"] = "Comma";
-        //    localSettings.Values["MSBandViewer-sessionDataPath"] = ApplicationData.Current.LocalFolder.Name;
-        //}
-
-        //private void VerifySettings()
-        //{
-        //    if (settings.pairedIndex == 0)
-        //    {
-        //        settings.pairedIndex = 1;
-        //        localSettings.Values["MSBandViewer-pairedIndex"] = 1;
-        //    }
-
-        //    if (settings.sessionTrackInterval == 0.0)
-        //    {
-        //        settings.sessionTrackInterval = 500.0;
-        //        localSettings.Values["MSBandViewer-sessionTrackInterval"] = 500.0;
-        //    }
-
-        //    if (settings.fileSeparator == "")
-        //    {
-        //        settings.fileSeparator = "Comma";
-        //        localSettings.Values["MSBandViewer-fileSeparator"] = "Comma";
-        //    }
-
-        //    if (settings.sessionDataPath == "")
-        //    {
-        //        settings.sessionDataPath = ApplicationData.Current.LocalFolder.Name;
-        //        localSettings.Values["MSBandViewer-sessionDataPath"] = ApplicationData.Current.LocalFolder.Name;
-        //    }
-        //}
-
-        //private void LoadSettings()
-        //{
-        //    settings = new SettingData();
-
-        //    CreateSettingsIfNotExist();
-
-        //    settings.pairedIndex = (int)localSettings.Values["MSBandViewer-pairedIndex"];
-        //    settings.sessionTrackInterval = (double)localSettings.Values["MSBandViewer-sessionTrackInterval"];
-        //    settings.fileSeparator = localSettings.Values["MSBandViewer-fileSeparator"].ToString();
-        //    settings.sessionDataPath = localSettings.Values["MSBandViewer-sessionDataPath"].ToString();
-
-        //    VerifySettings();
-        //}
+        #region Page Control Events
 
         private void MenuPaneButton_Click(object sender, RoutedEventArgs e)
         {
@@ -111,20 +47,6 @@ namespace Niuware.MSBandViewer.Views
         {
             await Windows.System.Launcher.LaunchUriAsync(new Uri("ms-settings:bluetooth"));
         }
-
-        #region INotifyPropertyChanged
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        public void NotifyPropertyChanged(string propertyName)
-        {
-            if (PropertyChanged != null)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-            }
-        }
-
-        #endregion
 
         private async void changeSessionDataPathButton_Click(object sender, RoutedEventArgs e)
         {
@@ -140,8 +62,11 @@ namespace Niuware.MSBandViewer.Views
 
                 if (sf != null)
                 {
+                    // Save accessToken for the selected folder
+                    string pickedFolderToken = Windows.Storage.AccessCache.StorageApplicationPermissions.FutureAccessList.Add(sf);
+                    settings.UpdateValue("MSBandViewer-sessionDataPathToken", pickedFolderToken);
+
                     settings.Data.sessionDataPath = sessionDataPathTextBlock.Text = sf.Path;
-                    //localSettings.Values["MSBandViewer-sessionDataPath"] = settings.Data.sessionDataPath;
                     settings.UpdateValue("MSBandViewer-sessionDataPath", settings.Data.sessionDataPath);
                 }
             }
@@ -149,20 +74,33 @@ namespace Niuware.MSBandViewer.Views
 
         private void separatorComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            //localSettings.Values["MSBandViewer-fileSeparator"] = ((ComboBox)sender).SelectedValue.ToString();
             settings.UpdateValue("MSBandViewer-fileSeparator", ((ComboBox)sender).SelectedValue.ToString());
         }
 
         private void pairedIndexComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            //localSettings.Values["MSBandViewer-pairedIndex"] = (int)((ComboBox)sender).SelectedValue;
             settings.UpdateValue("MSBandViewer-pairedIndex", (int)((ComboBox)sender).SelectedValue);
         }
 
         private void slider_ValueChanged(object sender, Windows.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
         {
-            //localSettings.Values["MSBandViewer-sessionTrackInterval"] = ((Slider)sender).Value;
             settings.UpdateValue("MSBandViewer-sessionTrackInterval", ((Slider)sender).Value);
         }
+
+        #endregion
+
+        #region INotifyPropertyChanged
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public void NotifyPropertyChanged(string propertyName)
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
+
+        #endregion
     }
 }

@@ -68,7 +68,7 @@ namespace Niuware.MSBandViewer
                 // When the navigation stack isn't restored navigate to the first page,
                 // configuring the new page by passing required information as a navigation
                 // parameter
-                shell.AppFrame.Navigate(typeof(SettingsPage), e.Arguments, new Windows.UI.Xaml.Media.Animation.SuppressNavigationTransitionInfo());
+                shell.AppFrame.Navigate(typeof(DashboardPage), e.Arguments, new Windows.UI.Xaml.Media.Animation.SuppressNavigationTransitionInfo());
             }
             // Ensure the current window is active
             Window.Current.Activate();

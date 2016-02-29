@@ -22,7 +22,7 @@
             <AppBarButton x:Name="syncBandButton" Icon="Sync" Label="sync band" Click="syncBandButton_Click" />
             <AppBarSeparator />
             <AppBarButton x:Name="startOrStopSessionButtton" Icon="Play" Label="start session" Click="startOrStopSessionButtton_Click" />
-            <AppBarButton Icon="save" Label="save" Click="saveSessionButton_Click" />
+            <AppBarButton x:Name="saveSessionButton" Icon="save" Label="save" Click="saveSessionButton_Click" IsEnabled="False" />
         </CommandBar>
     </Page.BottomAppBar>
 

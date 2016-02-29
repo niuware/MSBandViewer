@@ -22,6 +22,14 @@ namespace Niuware.MSBandViewer.Sensor
                 contact;
         }
 
+        public string Output(string separator = ",")
+        {
+            return heartRate.ToString() + separator + rrInterval + separator + gsr.ToString() + separator + temperature + separator +
+                accelerometer.X + separator + accelerometer.Y + separator + accelerometer.Z + separator +
+                gyroscopeAngVel.X + separator + gyroscopeAngVel.Y + separator + gyroscopeAngVel.Z + separator +
+                contact;
+        }
+
         public SensorData Copy()
         {
             return (SensorData)this.MemberwiseClone();

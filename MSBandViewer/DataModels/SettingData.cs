@@ -7,5 +7,6 @@
 
         public string fileSeparator;
         public string sessionDataPath;
+        public string sessionDataPathToken;
     }
 }

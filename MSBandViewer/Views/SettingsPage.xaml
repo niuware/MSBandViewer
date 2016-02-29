@@ -86,9 +86,10 @@
                 <TextBlock Grid.Row="6" Grid.Column="0">Column separator</TextBlock>
                 <ComboBox x:Name="separatorComboBox" Grid.Row="6" Grid.Column="1" PlaceholderText="Pick a separator"
                           SelectionChanged="separatorComboBox_SelectionChanged" SelectedValue="{x:Bind Path=Settings.fileSeparator,Mode=TwoWay}">
-                    <x:String>Comma</x:String>
-                    <x:String>Tab</x:String>
                     <x:String>Semicolon</x:String>
+                    <x:String>Comma</x:String>
+                    <x:String>Colon</x:String>
+                    <x:String>Tab</x:String>
                     <x:String>Space</x:String>
                 </ComboBox>
                 <TextBlock Grid.Row="7" Grid.Column="0">Default path</TextBlock>

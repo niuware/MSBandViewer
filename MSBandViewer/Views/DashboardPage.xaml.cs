@@ -1,16 +1,17 @@
-﻿using System;
+﻿using Microsoft.Band;
+using Microsoft.Band.Sensors;
+using Niuware.MSBandViewer.Helpers;
+using Niuware.MSBandViewer.Sensor;
+using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading.Tasks;
-using Windows.UI.Xaml;
+using Windows.Storage;
 using Windows.UI.Popups;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Microsoft.Band;
-using Microsoft.Band.Sensors;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
-using Niuware.MSBandViewer.Sensor;
-using System.Collections.Generic;
-using Windows.Storage;
 
 namespace Niuware.MSBandViewer.Views
 {
@@ -42,9 +43,13 @@ namespace Niuware.MSBandViewer.Views
             }
         }
 
+        Settings settings;
+
         public DashboardPage()
         {
             this.InitializeComponent();
+
+            settings = new Settings();
 
             MinHeartBpm = 250;
 
@@ -60,7 +65,10 @@ namespace Niuware.MSBandViewer.Views
             heartRateStoryboard.Begin();
             heartRateStoryboard.Pause();
 
-            band = new Band();
+            band = new Band()
+            {
+                SessionTrackInterval = (int)settings.Data.sessionTrackInterval
+            };
 
             accelerometerLineGraphCanvas.Label = "Accelerometer";
             accelerometerLineGraphCanvas.AddLineGraph(0.0, "X", new SolidColorBrush(Windows.UI.Colors.White));
@@ -71,6 +79,34 @@ namespace Niuware.MSBandViewer.Views
             gyroscopeLineGraphCanvas.AddLineGraph(0.0, "X", new SolidColorBrush(Windows.UI.Colors.White));
             gyroscopeLineGraphCanvas.AddLineGraph(-10.0, "Y", (SolidColorBrush)Resources["SystemControlHighlightAccentBrush"]);
             gyroscopeLineGraphCanvas.AddLineGraph(10.0, "Z", new SolidColorBrush(Windows.UI.Colors.Gray));
+        }
+
+        private void UpdateUI()
+        {
+            switch (band.Status)
+            {
+                case BandSyncStatus.SYNCED:
+                case BandSyncStatus.SYNCED_LIMITED_ACCESS:
+
+                    syncBandButton.Icon = new SymbolIcon(Symbol.DisableUpdates);
+                    syncBandButton.Label = "unsync band";
+
+                    syncGrid.Visibility = Visibility.Collapsed;
+                    startOrStopSessionButtton.IsEnabled = true;
+
+                    commandBar.IsEnabled = true;
+                    commandBar.IsOpen = true;
+                    break;
+                case BandSyncStatus.SYNCED_TERMINATED:
+                    
+                    syncBandButton.Icon = new SymbolIcon(Symbol.Sync);
+                    syncBandButton.Label = "sync band";
+                    startOrStopSessionButtton.IsEnabled = false;
+                    break;
+                default:
+                    commandBar.IsEnabled = false;
+                    break;
+            }
         }
 
         private async void SensorTimer_Tick(object sender, object e)
@@ -123,11 +159,14 @@ namespace Niuware.MSBandViewer.Views
                 if (band.IsWorn)
                 {
                     syncGrid.Visibility = Visibility.Collapsed;
+                    startOrStopSessionButtton.IsEnabled = true;
                 }
                 else
                 {
                     gyroscopeLineGraphCanvas.Reset();
                     accelerometerLineGraphCanvas.Reset();
+
+                    startOrStopSessionButtton.IsEnabled = false;
 
                     SetSyncMessage("Waiting for band user...");
                 }
@@ -145,6 +184,7 @@ namespace Niuware.MSBandViewer.Views
         {
             double clockOffset = 0;
 
+            // Fix the left margin, if the hour requires to display 2 digits
             if (DateTime.Now.ToString("%h").Length > 1)
             {
                 clockOffset = 16;
@@ -161,6 +201,7 @@ namespace Niuware.MSBandViewer.Views
         {
             SetSyncMessage("Preparing the dashboard...");
 
+            // Unsuscribe all sensors of current sessions
             band.UnsuscribeSensors();
             await band.SuscribeSensors();
 
@@ -187,9 +228,7 @@ namespace Niuware.MSBandViewer.Views
 
             sensorTimer.Start();
 
-            syncGrid.Visibility = Visibility.Collapsed;
-            commandBar.IsEnabled = true;
-            commandBar.IsOpen = true;
+            UpdateUI();
         }
 
         private void UpdateBandBackgroundImage()
@@ -213,7 +252,7 @@ namespace Niuware.MSBandViewer.Views
 
             try
             {
-                await band.SyncBand();
+                await band.SyncBand(settings.Data.pairedIndex);
             }
             catch (BandAccessDeniedException)
             {
@@ -275,9 +314,6 @@ namespace Niuware.MSBandViewer.Views
                 case 0:
                     SyncBand();
                     break;
-                case 1:
-                    // TODO: Go to settings
-                    break;
                 default: break;
             }
         }
@@ -293,13 +329,24 @@ namespace Niuware.MSBandViewer.Views
 
         #endregion
 
-        #region Page Button Events
+        #region Page Control Events
 
         private void syncBandButton_Click(object sender, RoutedEventArgs e)
         {
-            band.UnsuscribeSensors(true, true);
+            if (band.Status == BandSyncStatus.SYNCED || band.Status == BandSyncStatus.SYNCED_LIMITED_ACCESS)
+            {
+                band.UnsuscribeSensors(true, true);
 
-            //SyncBand();
+                UpdateUI();
+
+                SetSyncMessage("Session terminated by user.", false);
+            }
+            else 
+            {
+                band.Reconnect();
+
+                StartDashboard();
+            }
         }
 
         private async void startOrStopSessionButtton_Click(object sender, RoutedEventArgs e)
@@ -314,6 +361,8 @@ namespace Niuware.MSBandViewer.Views
                     startOrStopSessionButtton.Label = "stop session";
                     msBandRecordTextBlock.Visibility = Visibility.Visible;
                     msBandRecordTextBlockStoryboard.Begin();
+
+                    saveSessionButton.IsEnabled = false;
                 });
             }
             else
@@ -326,17 +375,35 @@ namespace Niuware.MSBandViewer.Views
                     startOrStopSessionButtton.Label = "start session";
                     msBandRecordTextBlock.Visibility = Visibility.Collapsed;
                     msBandRecordTextBlockStoryboard.Stop();
+
+                    saveSessionButton.IsEnabled = true;
                 });
             }
         }
 
         private async void saveSessionButton_Click(object sender, RoutedEventArgs e)
         {
+            if (band.SessionData.Count == 0)
+            {
+                saveSessionButton.IsEnabled = false;
+                return;
+            }
+
             SetSyncMessage("Saving session data...");
 
             band.UnsuscribeSensors(true, true);
 
-            StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
+            StorageFolder storageFolder;
+
+            if (settings.Data.sessionDataPathToken != "")
+            {
+                storageFolder =
+                    await Windows.Storage.AccessCache.StorageApplicationPermissions.FutureAccessList.GetFolderAsync(settings.Data.sessionDataPathToken);
+            }
+            else
+            {
+                storageFolder = await StorageFolder.GetFolderFromPathAsync(settings.Data.sessionDataPath);
+            }
 
             try
             {
@@ -344,13 +411,16 @@ namespace Niuware.MSBandViewer.Views
                     await storageFolder.CreateFileAsync("msbv-session-data" + DateTime.Now.ToString("ddMMyy-HHmm") + 
                                                             ".csv", CreationCollisionOption.GenerateUniqueName);
 
+                string sp = settings.GetStringFileSeparator();
+
                 // Headers for the file
                 await FileIO.AppendTextAsync(sessionFile, 
-                    "TIMESTAMP, HR, RR, GSR, TEMP, ACCEL X, ACCEL Y, ACCEL Z, GYRO X, GYRO Y, GYRO Z, CONTACT" + "\n");
+                    "TIMESTAMP" + sp + " HR" + sp + " RR" + sp + " GSR" + sp + " TEMP" + sp + " ACCEL X" + sp +
+                    " ACCEL Y" + sp + " ACCEL Z" + sp + " GYRO X" + sp + " GYRO Y" + sp + " GYRO Z" + sp + " CONTACT" + "\n");
 
                 foreach (KeyValuePair<DateTime, SensorData> kvp in band.SessionData)
                 {
-                    await FileIO.AppendTextAsync(sessionFile, kvp.Key.ToString("HH:mm:ss") + "," + kvp.Value.ToString() + "\n");
+                    await FileIO.AppendTextAsync(sessionFile, kvp.Key.ToString("HH:mm:ss") + sp + kvp.Value.Output(sp) + "\n");
                 }
 
                 SetSyncMessage("Session data succesfully saved.", false);
@@ -359,6 +429,10 @@ namespace Niuware.MSBandViewer.Views
             {
                 SetSyncMessage("Unable to save the session data. " + ex.Message, false);
             }
+
+            UpdateUI();
+
+            saveSessionButton.IsEnabled = false;
         }
 
         private void MenuPaneButton_Click(object sender, RoutedEventArgs e)

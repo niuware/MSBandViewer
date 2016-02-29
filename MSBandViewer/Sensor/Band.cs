@@ -45,8 +45,8 @@ namespace Niuware.MSBandViewer.Sensor
         public Dictionary<DateTime, SensorData> SessionData { get { return sessionData; } }
 
         // Session data timer
-        Timer sessionDataTimer;
-        public int SessionDataTimerUpdate{ get; set; }
+        Timer sessionTrackIntervalTimer;
+        public int SessionTrackInterval{ get; set; }
         bool sessionInProgress;
         public bool IsSessionInProgress { get { return sessionInProgress; } }
 
@@ -65,11 +65,19 @@ namespace Niuware.MSBandViewer.Sensor
         {
             data = new SensorData();
             status = BandSyncStatus.UNKNOWN;
-            SessionDataTimerUpdate = 1000; // in milliseconds
+            SessionTrackInterval = 1000; // in milliseconds
 
             sessionData = new Dictionary<DateTime, SensorData>();
 
-            sessionDataTimer = new Timer(sessionDataTimer_Callback, null, Timeout.Infinite, SessionDataTimerUpdate);
+            sessionTrackIntervalTimer = new Timer(sessionTrackIntervalTimer_Callback, null, Timeout.Infinite, SessionTrackInterval);
+        }
+
+        public void Reconnect()
+        {
+            if (status == BandSyncStatus.SYNCED_TERMINATED)
+            {
+                status = BandSyncStatus.SYNCED;
+            }
         }
 
         /// <summary>
@@ -77,9 +85,9 @@ namespace Niuware.MSBandViewer.Sensor
         /// </summary>
         /// <param name="bandIndex">The band id. 0 is the first paired band found on the system</param>
         /// <returns></returns>
-        public async Task SyncBand(int bandIndex = 0)
+        public async Task SyncBand(int bandIndex = 1)
         {
-            pairedBandIndex = bandIndex;
+            pairedBandIndex = (bandIndex <= 0) ? 0 : bandIndex - 1;
 
             try
             {
@@ -92,6 +100,8 @@ namespace Niuware.MSBandViewer.Sensor
                 }
                 else
                 {
+                    pairedBandIndex = (pairedBandIndex >= pairedBands.Length) ? 0 : pairedBandIndex;
+
                     string[] bandName = pairedBands[pairedBandIndex].Name.Split(':');
 
                     BandName = bandName[0].Remove(bandName[0].LastIndexOf(' '));
@@ -123,7 +133,7 @@ namespace Niuware.MSBandViewer.Sensor
 
         #region Save session
 
-        private void sessionDataTimer_Callback(object state)
+        private void sessionTrackIntervalTimer_Callback(object state)
         {
             DateTime currentTime =
                 new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute, DateTime.Now.Second);
@@ -140,14 +150,14 @@ namespace Niuware.MSBandViewer.Sensor
             sessionInProgress = true;
 
             ClearSession();
-            sessionDataTimer.Change(0, SessionDataTimerUpdate);
+            sessionTrackIntervalTimer.Change(0, SessionTrackInterval);
         }
 
         public void EndSession(bool clear = false)
         {
             sessionInProgress = false;
 
-            sessionDataTimer.Change(Timeout.Infinite, SessionDataTimerUpdate);
+            sessionTrackIntervalTimer.Change(Timeout.Infinite, SessionTrackInterval);
 
             if (clear)
             {
@@ -170,11 +180,14 @@ namespace Niuware.MSBandViewer.Sensor
         /// <returns></returns>
         public async Task SuscribeSensors()
         {
+            // Get band info
+            SuscribeBandInfo();
+
             // Contact sensor
             SuscribeContactSensor();
 
             //Heart rate sensor
-            SuscribeHeartRateSensor();
+            await SuscribeHeartRateSensor();
 
             // RR Interval
             SuscribeRRInterval();
@@ -190,9 +203,6 @@ namespace Niuware.MSBandViewer.Sensor
 
             // Gyroscope
             SuscribeGyroscopeSensor();
-
-            // Get band info
-            SuscribeBandInfo();
 
             // Give the user feedback the sensor suscribing has finished
             await bandClient.NotificationManager.VibrateAsync(Microsoft.Band.Notifications.VibrationType.NotificationOneTone);
@@ -274,7 +284,7 @@ namespace Niuware.MSBandViewer.Sensor
             await bandClient.SensorManager.Gsr.StartReadingsAsync();
         }
 
-        private async void SuscribeHeartRateSensor()
+        private async Task SuscribeHeartRateSensor()
         {
             if (bandClient.SensorManager.HeartRate.GetCurrentUserConsent() == UserConsent.Granted)
             {
