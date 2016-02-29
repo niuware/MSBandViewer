@@ -156,11 +156,13 @@ namespace Niuware.MSBandViewer
                 control.Loaded += Page_Loaded;
             }
 
+            /** Uncomment the following lines for enabling the use of the SystemNavigation Back button **/
+
             // Update the Back button depending on whether we can go Back.
-            SystemNavigationManager.GetForCurrentView().AppViewBackButtonVisibility =
-                AppFrame.CanGoBack ?
-                AppViewBackButtonVisibility.Visible :
-                AppViewBackButtonVisibility.Collapsed;
+            //SystemNavigationManager.GetForCurrentView().AppViewBackButtonVisibility =
+            //    AppFrame.CanGoBack ?
+            //    AppViewBackButtonVisibility.Visible :
+            //    AppViewBackButtonVisibility.Collapsed;
         }
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
