@@ -104,6 +104,7 @@
     <Compile Include="Controls\NavMenuListView.cs" />
     <Compile Include="Converters\ComboBoxConverter.cs" />
     <Compile Include="Converters\GsrToStringConverter.cs" />
+    <Compile Include="Converters\HeartRateToStringConverter.cs" />
     <Compile Include="Converters\LineGraphLabelConverter.cs" />
     <Compile Include="Converters\TemperatureToStringConverter.cs" />
     <Compile Include="DataModels\SettingData.cs" />

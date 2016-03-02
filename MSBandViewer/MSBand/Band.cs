@@ -163,13 +163,12 @@ namespace Niuware.MSBandViewer.MSBand
         }
 
         /// <summary>
-        /// Start tracking a new session
+        /// Start or resume tracking a new session
         /// </summary>
         public void StartSession()
         {
             sessionInProgress = true;
 
-            ClearSession();
             sessionTrackIntervalTimer.Change(0, SessionTrackInterval);
         }
 

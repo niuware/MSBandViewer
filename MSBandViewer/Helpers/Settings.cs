@@ -80,7 +80,7 @@ namespace Niuware.MSBandViewer.Helpers
             localSettings.Values["MSBandViewer-pairedIndex"] = 1;
             localSettings.Values["MSBandViewer-sessionTrackInterval"] = 500.0;
             localSettings.Values["MSBandViewer-fileSeparator"] = "Comma";
-            localSettings.Values["MSBandViewer-sessionDataPath"] = ApplicationData.Current.LocalFolder.Name;
+            localSettings.Values["MSBandViewer-sessionDataPath"] = ApplicationData.Current.LocalFolder.Path;
             localSettings.Values["MSBandViewer-sessionDataPathToken"] = "";
         }
 

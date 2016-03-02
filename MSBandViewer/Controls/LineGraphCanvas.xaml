@@ -24,4 +24,8 @@
     <StackPanel x:Name="labelStackPanel" HorizontalAlignment="Left" VerticalAlignment="Bottom" Style="{StaticResource GraphDetailStackPanelStyle}" Margin="0 0 0 40">
         <TextBlock FontSize="24" Margin="0 0 0 10" Text="{x:Bind Path=Label}"></TextBlock>
     </StackPanel>
+    <StackPanel HorizontalAlignment="Right" VerticalAlignment="Bottom" Orientation="Horizontal" Margin="0 0 0 40">
+        <AppBarButton x:Name="zoomInButton" Style="{StaticResource LineGraphCanvasAppBarButton}" Icon="ZoomIn" Click="zoomInButton_Click">+</AppBarButton>
+        <AppBarButton x:Name="zoomOutButton" Style="{StaticResource LineGraphCanvasAppBarButton}" Icon="ZoomOut" Click="zoomOutButton_Click">-</AppBarButton>
+    </StackPanel>
 </Grid>

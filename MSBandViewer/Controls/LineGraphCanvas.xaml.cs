@@ -15,7 +15,7 @@ namespace Niuware.MSBandViewer.Controls
         class LineGraph
         {
             public double X { get; set; }
-            public double Y { get; set; } 
+            public double Y { get; set; }
             public double YOffset { get; set; }
             public SolidColorBrush Brush { get; set; }
             public string Label { get; set; }
@@ -33,15 +33,8 @@ namespace Niuware.MSBandViewer.Controls
         public double YScale { get; set; }
         public string Label { get; set; }
 
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        public void NotifyPropertyChanged(string propertyName)
-        {
-            if (PropertyChanged != null)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-            }
-        }
+        public double YScaleMax { get; set; }
+        public double ScaleStep { get; set;}
 
         public LineGraphCanvas()
         {
@@ -49,6 +42,8 @@ namespace Niuware.MSBandViewer.Controls
 
             XScale = 10.0;
             YScale = 1.0;
+            YScaleMax = 15.0;
+            ScaleStep = 0.5;
 
             lineGraphList = new List<LineGraph>();
         }
@@ -146,5 +141,37 @@ namespace Niuware.MSBandViewer.Controls
 
             YOrigin = ActualHeight / 2.0;
         }
+
+        private void zoomInButton_Click(object sender, RoutedEventArgs e)
+        {
+            if ((YScale + ScaleStep) <= YScaleMax)
+            {
+                YScale += ScaleStep;
+                XScale += ScaleStep;
+            }
+        }
+
+        private void zoomOutButton_Click(object sender, RoutedEventArgs e)
+        {
+            if ((YScale - ScaleStep) > 0)
+            {
+                YScale -= ScaleStep;
+                XScale -= ScaleStep;
+            }
+        }
+
+        #region INotifyPropertyChanged 
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public void NotifyPropertyChanged(string propertyName)
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
+
+        #endregion
     }
 }

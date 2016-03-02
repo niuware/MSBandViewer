@@ -68,6 +68,7 @@ namespace Niuware.MSBandViewer.Views
 
                     settings.Data.sessionDataPath = sessionDataPathTextBlock.Text = sf.Path;
                     settings.UpdateValue("MSBandViewer-sessionDataPath", settings.Data.sessionDataPath);
+                    ToolTipService.SetToolTip(sessionDataPathTextBlock, settings.Data.sessionDataPath);
                 }
             }
         }
@@ -79,6 +80,7 @@ namespace Niuware.MSBandViewer.Views
 
             settings.Data.sessionDataPath = sessionDataPathTextBlock.Text = ApplicationData.Current.LocalFolder.Path;
             settings.UpdateValue("MSBandViewer-sessionDataPath", settings.Data.sessionDataPath);
+            ToolTipService.SetToolTip(sessionDataPathTextBlock, settings.Data.sessionDataPath);
         }
 
         private void separatorComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)

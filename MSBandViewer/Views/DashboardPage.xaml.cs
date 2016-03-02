@@ -376,8 +376,8 @@ namespace Niuware.MSBandViewer.Views
 
                 await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                 {
-                    startOrStopSessionButtton.Icon = new SymbolIcon(Symbol.Stop);
-                    startOrStopSessionButtton.Label = "stop session";
+                    startOrStopSessionButtton.Icon = new SymbolIcon(Symbol.Pause);
+                    startOrStopSessionButtton.Label = "pause session";
                     msBandRecordTextBlock.Visibility = Visibility.Visible;
                     msBandRecordTextBlockStoryboard.Begin();
 
@@ -391,7 +391,7 @@ namespace Niuware.MSBandViewer.Views
                 await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                 {
                     startOrStopSessionButtton.Icon = new SymbolIcon(Symbol.Play);
-                    startOrStopSessionButtton.Label = "start session";
+                    startOrStopSessionButtton.Label = "resume session";
                     msBandRecordTextBlock.Visibility = Visibility.Collapsed;
                     msBandRecordTextBlockStoryboard.Stop();
 
@@ -409,6 +409,18 @@ namespace Niuware.MSBandViewer.Views
             }
 
             SetSyncMessage("Saving session data...");
+
+            band.EndSession();
+
+            await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            {
+                startOrStopSessionButtton.IsEnabled = false;
+                startOrStopSessionButtton.Icon = new SymbolIcon(Symbol.Play);
+                startOrStopSessionButtton.Label = "start session";
+                msBandRecordTextBlock.Visibility = Visibility.Collapsed;
+                msBandRecordTextBlockStoryboard.Stop();
+            });
+            
 
             band.UnsuscribeSensors(true, true);
 
@@ -442,12 +454,14 @@ namespace Niuware.MSBandViewer.Views
                     await FileIO.AppendTextAsync(sessionFile, kvp.Key.ToString("HH:mm:ss") + sp + kvp.Value.Output(sp) + "\n");
                 }
 
-                SetSyncMessage("Session data succesfully saved.", false);
+                SetSyncMessage("Session data saved succesfully.", false);
             }
             catch(Exception ex)
             {
                 SetSyncMessage("Unable to save the session data. " + ex.Message, false);
             }
+
+            band.ClearSession();
 
             UpdateUI();
 

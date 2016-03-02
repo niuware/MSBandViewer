@@ -61,8 +61,8 @@
                     <RowDefinition Height="50" />
                     <RowDefinition Height="50" />
                 </Grid.RowDefinitions>
-                <TextBlock FontSize="22" Grid.Row="0" Grid.ColumnSpan="2" Margin="0 0 0 10">Sensor</TextBlock>
-                <TextBlock Grid.Row="1" Grid.Column="0">Paired device</TextBlock>
+                <TextBlock FontSize="22" Grid.Row="0" Grid.ColumnSpan="2" Margin="0 0 0 10">Band</TextBlock>
+                <TextBlock Grid.Row="1" Grid.Column="0">Synced with band</TextBlock>
                 <ComboBox x:Name="pairedIndexComboBox" Grid.Row="1" Grid.Column="1" PlaceholderText="Pick an index" 
                           ToolTipService.ToolTip="If you have more than one Microsoft Band paired with this device, choose the one to which you want to sync." 
                           ToolTipService.Placement="Right" SelectedValue="{x:Bind Path=Settings.pairedIndex,Mode=TwoWay,Converter={StaticResource ComboBoxConverter}}"
@@ -78,7 +78,7 @@
                 <TextBlock FontSize="22" Grid.Row="3" Grid.ColumnSpan="2" Margin="0 15 0 15">Session recording</TextBlock>
                 <TextBlock Grid.Row="4" Grid.Column="0">Tracking interval</TextBlock>
                 <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal">
-                    <Slider x:Name="slider" Minimum="50" Maximum="1500" StepFrequency="50" TickFrequency="50" Width="300" 
+                    <Slider x:Name="slider" Minimum="100" Maximum="1500" StepFrequency="100" TickFrequency="100" Width="300" 
                             TickPlacement="Outside" Value="{x:Bind Path=Settings.sessionTrackInterval,Mode=TwoWay}"/>
                     <TextBlock Margin="10 0 0 0"><Run Text="{x:Bind Path=slider.Value,Mode=OneWay}"></Run> ms</TextBlock>
                 </StackPanel>
@@ -94,7 +94,8 @@
                 </ComboBox>
                 <TextBlock Grid.Row="7" Grid.Column="0">Default path</TextBlock>
                 <StackPanel Grid.Row="7" Grid.Column="1" Orientation="Horizontal">
-                    <TextBlock x:Name="sessionDataPathTextBlock" TextTrimming="CharacterEllipsis" MaxWidth="250" Text="{x:Bind Path=Settings.sessionDataPath,Mode=TwoWay}"></TextBlock>
+                    <TextBlock x:Name="sessionDataPathTextBlock" TextTrimming="CharacterEllipsis" MaxWidth="250" 
+                               Text="{x:Bind Path=Settings.sessionDataPath,Mode=TwoWay}" ToolTipService.ToolTip="{x:Bind Path=Settings.sessionDataPath}"></TextBlock>
                     <Button x:Name="changeSessionDataPathButton" Click="changeSessionDataPathButton_Click">Change</Button>
                     <Button x:Name="resetSessionDataPathButton" Click="resetSessionDataPathButton_Click" Margin="15 0 0 0">Reset</Button>
                 </StackPanel>

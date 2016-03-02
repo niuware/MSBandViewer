@@ -16,6 +16,7 @@
     <Page.Resources>
         <converters:GsrToStringConverter x:Key="GsrConverter" />
         <converters:TemperatureToStringConverter x:Key="TemperatureConverter" />
+        <converters:HeartRateToStringConverter x:Key="HeartRateConverter" />
     </Page.Resources>
 
     <Page.BottomAppBar>
@@ -112,7 +113,7 @@
                                                FontSize="28" Margin="0 0 0 8" Foreground="Black" FontWeight="SemiBold" Text="{x:Bind Path=BandData.heartRate,Mode=OneWay}"></TextBlock>
                                 </Grid>
                                 <StackPanel Margin="20 0 0 0">
-                                    <TextBlock xml:space="preserve">Min: <Run Text="{x:Bind Path=MinHeartBpm,Mode=OneWay}" />   Max: <Run x:Name="heartRateMaxBpmTextBlock" Text="{x:Bind Path=MaxHeartBpm,Mode=OneWay}" /></TextBlock>
+                                    <TextBlock xml:space="preserve">Min: <Run Text="{x:Bind Path=MinHeartBpm,Mode=OneWay,Converter={StaticResource HeartRateConverter},ConverterParameter=min}" />   Max: <Run Text="{x:Bind Path=MaxHeartBpm,Mode=OneWay,Converter={StaticResource HeartRateConverter},ConverterParameter=max}" /></TextBlock>
                                     <TextBlock>RR Interval: <Run Text="{x:Bind Path=BandData.rrInterval,Mode=OneWay}" /></TextBlock>
                                     <TextBlock>Status: <Run x:Name="heartRateStatusTextBlock">Acquiring</Run></TextBlock>
                                 </StackPanel>
