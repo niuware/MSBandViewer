@@ -48,8 +48,14 @@ namespace Niuware.MSBandViewer.Views
             await Windows.System.Launcher.LaunchUriAsync(new Uri("ms-settings:bluetooth"));
         }
 
+        /// <summary>
+        /// Set the path to save the session files
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private async void changeSessionDataPathButton_Click(object sender, RoutedEventArgs e)
         {
+            // If the app is snapped the FolderPicker won't work
             bool unsnapped = ((Windows.UI.ViewManagement.ApplicationView.Value != Windows.UI.ViewManagement.ApplicationViewState.Snapped) || 
                 Windows.UI.ViewManagement.ApplicationView.TryUnsnap());
 
@@ -64,15 +70,22 @@ namespace Niuware.MSBandViewer.Views
                 {
                     // Save accessToken for the selected folder
                     string pickedFolderToken = Windows.Storage.AccessCache.StorageApplicationPermissions.FutureAccessList.Add(sf);
+
                     settings.UpdateValue("MSBandViewer-sessionDataPathToken", pickedFolderToken);
 
                     settings.Data.sessionDataPath = sessionDataPathTextBlock.Text = sf.Path;
                     settings.UpdateValue("MSBandViewer-sessionDataPath", settings.Data.sessionDataPath);
+
                     ToolTipService.SetToolTip(sessionDataPathTextBlock, settings.Data.sessionDataPath);
                 }
             }
         }
 
+        /// <summary>
+        /// Reset the default path (App Local State Storage Folder)
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void resetSessionDataPathButton_Click(object sender, RoutedEventArgs e)
         {
             settings.UpdateValue("MSBandViewer-sessionDataPathToken", "");
@@ -80,6 +93,7 @@ namespace Niuware.MSBandViewer.Views
 
             settings.Data.sessionDataPath = sessionDataPathTextBlock.Text = ApplicationData.Current.LocalFolder.Path;
             settings.UpdateValue("MSBandViewer-sessionDataPath", settings.Data.sessionDataPath);
+
             ToolTipService.SetToolTip(sessionDataPathTextBlock, settings.Data.sessionDataPath);
         }
 

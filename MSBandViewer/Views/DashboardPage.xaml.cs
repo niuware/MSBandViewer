@@ -15,12 +15,16 @@ using Windows.UI.Xaml.Media.Imaging;
 
 namespace Niuware.MSBandViewer.Views
 {
+    /// <summary>
+    /// Main dashboard for viewing and tracking the Microsoft Band sensors data
+    /// </summary>
     public sealed partial class DashboardPage : Page, INotifyPropertyChanged
     {
         int maxHeartBpm;
         public int MaxHeartBpm
         {
-            get { return maxHeartBpm; } set { maxHeartBpm = value; NotifyPropertyChanged("MaxHeartBpm"); }
+            get { return maxHeartBpm; }
+            set { maxHeartBpm = value; NotifyPropertyChanged("MaxHeartBpm"); }
         }
 
         int minHeartBpm;
@@ -30,7 +34,7 @@ namespace Niuware.MSBandViewer.Views
             set { minHeartBpm = value; NotifyPropertyChanged("MinHeartBpm"); }
         }
 
-        DispatcherTimer clockTimer, sensorTimer;
+        DispatcherTimer sensorTimer;
 
         Band band;
 
@@ -48,28 +52,25 @@ namespace Niuware.MSBandViewer.Views
         public DashboardPage()
         {
             this.InitializeComponent();
+            CompositionTarget.Rendering += CompositionTarget_Rendering;
 
             settings = new Settings();
 
-            MinHeartBpm = 250;
-
-            clockTimer = new DispatcherTimer();
-            clockTimer.Interval = new TimeSpan(0, 0, 1);
-            clockTimer.Tick += ClockTimer_Tick;
-            clockTimer.Start();
+            MinHeartBpm = 250;  // Set a very high value
 
             sensorTimer = new DispatcherTimer();
-            sensorTimer.Interval = new TimeSpan(0, 0, 0, 0, 10);
+            sensorTimer.Interval = new TimeSpan(0, 0, 0, 0, 10);    // Tick for the "drawing loop"
             sensorTimer.Tick += SensorTimer_Tick;
 
             heartRateStoryboard.Begin();
-            //heartRateStoryboard.Pause();
 
+            // Instance of the Microsoft Band
             band = new Band()
             {
                 SessionTrackInterval = (int)settings.Data.sessionTrackInterval
             };
 
+            // Set the LineGraphCanvas controls
             accelerometerLineGraphCanvas.Label = "Accelerometer";
             accelerometerLineGraphCanvas.AddLineGraph(0.0, "X", new SolidColorBrush(Windows.UI.Colors.White));
             accelerometerLineGraphCanvas.AddLineGraph(-10.0, "Y", (SolidColorBrush)Resources["SystemControlHighlightAccentBrush"]);
@@ -81,6 +82,22 @@ namespace Niuware.MSBandViewer.Views
             gyroscopeLineGraphCanvas.AddLineGraph(10.0, "Z", new SolidColorBrush(Windows.UI.Colors.Gray));
         }
 
+        /// <summary>
+        /// Render loop for the page
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e">RenderingEventArgs</param>
+        private void CompositionTarget_Rendering(object sender, object e)
+        {
+            UpdateClock(); 
+
+            // We can render the dashboard on a frame based way, but can the framerate could be uncertain
+            //UpdateDashboard();
+        }
+
+        /// <summary>
+        /// Update the AppCommandBar depending on the status of the band
+        /// </summary>
         private void UpdateUI()
         {
             switch (band.Status)
@@ -110,11 +127,19 @@ namespace Niuware.MSBandViewer.Views
         }
 
         /// <summary>
-        /// "Drawing loop" for all the controls, graphics, etc.
+        /// Update the dashboard image clock
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private async void SensorTimer_Tick(object sender, object e)
+        private async void UpdateClock()
+        {
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { msBandClockTextBlock.Text = DateTime.Now.ToString("h:mm"); });
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { msBandDayStringTextBlock.Text = DateTime.Now.ToString("ddd"); });
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { msBandDayNumberTextBlock.Text = DateTime.Now.ToString("dd"); });
+        }
+
+        /// <summary>
+        /// Update the dashboard data (band sensors, graphs, etc.)
+        /// </summary>
+        private async void UpdateDashboard()
         {
             if (band.Status == BandSyncStatus.SYNCED_TERMINATED || band.Status == BandSyncStatus.SYNCED_SUSCRIBING)
             {
@@ -153,7 +178,7 @@ namespace Niuware.MSBandViewer.Views
                     BandData.accelerometer.Z,
                 });
 
-                gyroscopeLineGraphCanvas.UpdateValues(new double[] 
+                gyroscopeLineGraphCanvas.UpdateValues(new double[]
                 {
                     BandData.gyroscopeAngVel.X,
                     BandData.gyroscopeAngVel.Y,
@@ -177,13 +202,20 @@ namespace Niuware.MSBandViewer.Views
             });
         }
 
-        private async void ClockTimer_Tick(object sender, object e)
+        /// <summary>
+        /// "Render loop" based on time
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void SensorTimer_Tick(object sender, object e)
         {
-            await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { msBandClockTextBlock.Text = DateTime.Now.ToString("h:mm"); });
-            await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { msBandDayStringTextBlock.Text = DateTime.Now.ToString("ddd"); });
-            await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { msBandDayNumberTextBlock.Text = DateTime.Now.ToString("dd"); });
+            UpdateDashboard();
         }
 
+        /// <summary>
+        /// Fix the margins for the dashboard image clock
+        /// </summary>
+        /// <returns></returns>
         private async Task StartBandClock()
         {
             double clockOffset = 0;
@@ -201,12 +233,17 @@ namespace Niuware.MSBandViewer.Views
             });
         }
 
+        /// <summary>
+        /// Initialize the dashboard
+        /// </summary>
         private async void StartDashboard()
         {
             SetSyncMessage("Preparing the dashboard...");
 
-            // Unsuscribe all sensors of current sessions
+            // Unsuscribe all sensors (current active suscriptions)
             band.UnsuscribeSensors();
+
+            // Suscribe all sensors
             await band.SuscribeSensors();
 
             if (band.Status == BandSyncStatus.SYNCED_LIMITED_ACCESS)
@@ -227,7 +264,6 @@ namespace Niuware.MSBandViewer.Views
 
             UpdateBandBackgroundImage();
 
-            // Start band UI clock
             await StartBandClock();
 
             sensorTimer.Start();
@@ -235,6 +271,9 @@ namespace Niuware.MSBandViewer.Views
             UpdateUI();
         }
 
+        /// <summary>
+        /// Add the Me Tile background image to the dashboard image clock
+        /// </summary>
         private void UpdateBandBackgroundImage()
         {
             try
@@ -246,6 +285,9 @@ namespace Niuware.MSBandViewer.Views
             catch { }
         }
 
+        /// <summary>
+        /// Connect with the Microsoft Band
+        /// </summary>
         private async void SyncBand()
         {
             MessageDialog msgDlg = new MessageDialog("");
@@ -260,7 +302,7 @@ namespace Niuware.MSBandViewer.Views
             }
             catch (BandAccessDeniedException)
             {
-                msgDlg.Content = "Make sure your Microsoft Band (" + band.BandName + ") has permission to synchorize to this computer and try again.";
+                msgDlg.Content = "Make sure your Microsoft Band (" + band.BandName + ") has permission to synchorize to this device.";
                 msgDlg.Commands.Add(new UICommand("Try Again", new UICommandInvokedHandler(this.CommandInvokedHandler), 0));
                 msgDlg.Commands.Add(new UICommand("Close", new UICommandInvokedHandler(this.CommandInvokedHandler), -1));
             }
@@ -292,6 +334,11 @@ namespace Niuware.MSBandViewer.Views
             }
         }
 
+        /// <summary>
+        /// Displays a message visible by the user
+        /// </summary>
+        /// <param name="message">String message</param>
+        /// <param name="progress">Show the ProgressRing?</param>
         private async void SetSyncMessage(string message, bool progress = true)
         {
             await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
@@ -302,13 +349,20 @@ namespace Niuware.MSBandViewer.Views
             });
         }
 
+        /// <summary>
+        /// Unsuscribe sensors and timers
+        /// </summary>
+        /// <param name="dispose">Dispose the Band object?</param>
         public void FinalizeAllTasks(bool dispose = false)
         {
             sensorTimer.Stop();
-            clockTimer.Stop();
             band.UnsuscribeSensors(true, true, dispose);
         }
 
+        /// <summary>
+        /// If the band object is still operation async actions, block the option to switch to another Page
+        /// </summary>
+        /// <returns>Is okay to unload the DashboardPage</returns>
         public bool IsUnloadActive()
         {
             if (band.Status == BandSyncStatus.UNKNOWN || band.Status == BandSyncStatus.SYNCED_SUSCRIBING)
@@ -321,6 +375,10 @@ namespace Niuware.MSBandViewer.Views
 
         #region Page Commands
 
+        /// <summary>
+        /// Message dialogs button commands
+        /// </summary>
+        /// <param name="command"></param>
         private void CommandInvokedHandler(IUICommand command)
         {
             switch ((int)command.Id)
@@ -350,6 +408,11 @@ namespace Niuware.MSBandViewer.Views
 
         #region Page Control Events
 
+        /// <summary>
+        /// Sync the Microsoft Band
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void syncBandButton_Click(object sender, RoutedEventArgs e)
         {
             if (band.Status == BandSyncStatus.SYNCED || band.Status == BandSyncStatus.SYNCED_LIMITED_ACCESS)
@@ -368,6 +431,11 @@ namespace Niuware.MSBandViewer.Views
             }
         }
 
+        /// <summary>
+        /// Starts or resumes a sensor tracking session
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private async void startOrStopSessionButtton_Click(object sender, RoutedEventArgs e)
         {
             if (!band.IsSessionInProgress)
@@ -400,6 +468,11 @@ namespace Niuware.MSBandViewer.Views
             }
         }
 
+        /// <summary>
+        /// Exports the tracked session file
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private async void saveSessionButton_Click(object sender, RoutedEventArgs e)
         {
             if (band.SessionData.Count == 0)
@@ -424,6 +497,7 @@ namespace Niuware.MSBandViewer.Views
 
             band.UnsuscribeSensors(true, true);
 
+            // Load the export path
             StorageFolder storageFolder;
 
             if (settings.Data.sessionDataPathToken != "")
@@ -442,7 +516,9 @@ namespace Niuware.MSBandViewer.Views
                     await storageFolder.CreateFileAsync("msbv-session-data" + DateTime.Now.ToString("ddMMyy-HHmm") + 
                                                             ".csv", CreationCollisionOption.GenerateUniqueName);
 
-                string sp = settings.GetStringFileSeparator();
+                string sp = settings.GetStringFileSeparator();  // Separator for each column
+
+                // TODO: Add summary headers like average values, total duration, etc.
 
                 // Headers for the file
                 await FileIO.AppendTextAsync(sessionFile, 

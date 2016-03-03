@@ -1,7 +1,7 @@
 ﻿namespace Niuware.MSBandViewer.DataModels
 {
     /// <summary>
-    /// App settings
+    /// App data settings class
     /// </summary>
     public class SettingData
     {

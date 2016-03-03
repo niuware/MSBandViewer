@@ -10,7 +10,7 @@ using Niuware.MSBandViewer.DataModels;
 namespace Niuware.MSBandViewer.MSBand
 {
     /// <summary>
-    /// Available status for the band
+    /// Possible status values for the band object
     /// </summary>
     public enum BandSyncStatus
     {
@@ -241,7 +241,7 @@ namespace Niuware.MSBandViewer.MSBand
         /// </summary>
         /// <param name="unsuscribeContact">If there is no need to know if the user is wearing the band anymore, then unscribe contact sensor too</param>
         /// <param name="updateStatus">Update the band sync status</param>
-        /// <param name="dispose">Dispose the bandclient object</param>
+        /// <param name="dispose">Dispose the bandclient object. Necessary when switching to another Page</param>
         public void UnsuscribeSensors(bool unsuscribeContact = false, bool updateStatus = false, bool dispose = false)
         {
             if (updateStatus)

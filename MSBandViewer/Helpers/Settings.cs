@@ -18,11 +18,20 @@ namespace Niuware.MSBandViewer.Helpers
             LoadSettings();
         }
 
+        /// <summary>
+        /// Adds or modifies a setting value
+        /// </summary>
+        /// <param name="key">Setting key name</param>
+        /// <param name="value">Setting value</param>
         public void UpdateValue(string key, object value)
         {
             localSettings.Values[key] = value;
         }
 
+        /// <summary>
+        /// Gets the column separator character
+        /// </summary>
+        /// <returns>String separator</returns>
         public string GetStringFileSeparator()
         {
             switch (data.fileSeparator)
@@ -41,6 +50,9 @@ namespace Niuware.MSBandViewer.Helpers
             }
         }
 
+        /// <summary>
+        /// Load settings data
+        /// </summary>
         private void LoadSettings()
         {
             data = new SettingData();
@@ -57,7 +69,7 @@ namespace Niuware.MSBandViewer.Helpers
         }
 
         /// <summary>
-        /// Creates all default settings if it is the first time to load the app
+        /// If it's the first time to load the app, add the default setting values
         /// </summary>
         private void CreateSettingsIfNotExist()
         {
@@ -85,8 +97,8 @@ namespace Niuware.MSBandViewer.Helpers
         }
 
         /// <summary>
-        /// Verify that all loaded settings are in a correct format, if not
-        /// set and save the default values
+        /// Verify individually that all loaded settings have the correct format if not,
+        /// set and save each default value
         /// </summary>
         private void VerifySettings()
         {
@@ -111,7 +123,7 @@ namespace Niuware.MSBandViewer.Helpers
             if (data.sessionDataPath == "")
             {
                 data.sessionDataPath = ApplicationData.Current.LocalFolder.Name;
-                localSettings.Values["MSBandViewer-sessionDataPath"] = ApplicationData.Current.LocalFolder.Name;
+                localSettings.Values["MSBandViewer-sessionDataPath"] = ApplicationData.Current.LocalFolder.Path;
             }
         }
     }

@@ -250,15 +250,6 @@
         </Setter>
     </Style>
 
-    <Style x:Key="PageTitleTextBlockStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyTextBlockStyle}">
-        <Setter Property="FontWeight" Value="Bold"/>
-        <Setter Property="TextWrapping" Value="NoWrap"/>
-        <Setter Property="CharacterSpacing" Value="75"/>
-        <Setter Property="HorizontalAlignment" Value="Left"/>
-        <Setter Property="VerticalAlignment" Value="Top"/>
-        <Setter Property="Margin" Value="12, 14, 12, 4"/>
-    </Style>
-
     <Style x:Key="NavMenuItemContainerStyle" TargetType="ListViewItem">
         <Setter Property="MinWidth" Value="{StaticResource SplitViewCompactPaneThemeLength}"/>
         <Setter Property="Height" Value="48"/>
@@ -269,16 +260,6 @@
         <Setter Property="Background" Value="{StaticResource GraphDetailStackPanelBackgroundBrush}" />
         <Setter Property="Padding" Value="10" />
     </Style>
-
-    <ControlTemplate x:Key="SplitViewPaneMenuButtonTemplate" TargetType="Button">
-        <Grid MinWidth="48" Height="48" HorizontalAlignment="Center" VerticalAlignment="Center">
-            <Border Background="{ThemeResource SystemControlBackgroundBaseLowBrush}" />
-            <ContentPresenter>
-                <TextBlock FontFamily="{ThemeResource SymbolThemeFontFamily}" 
-                           HorizontalAlignment="Center" VerticalAlignment="Center">&#xE700;</TextBlock>
-            </ContentPresenter>
-        </Grid>
-    </ControlTemplate>
 
     <ControlTemplate x:Key="SplitViewContentMenuButtonTemplate" TargetType="Button">
         <Grid MinWidth="48" Height="48" HorizontalAlignment="Center" VerticalAlignment="Center">
