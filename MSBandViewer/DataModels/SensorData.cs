@@ -1,6 +1,4 @@
-﻿using Niuware.MSBandViewer.DataModels;
-
-namespace Niuware.MSBandViewer.MSBand
+﻿namespace Niuware.MSBandViewer.DataModels
 {
     /// <summary>
     /// Contains all sensors data
@@ -24,10 +22,7 @@ namespace Niuware.MSBandViewer.MSBand
         /// <returns>String with all values</returns>
         public string Output(string separator = ",")
         {
-            return heartRate.ToString() + separator + rrInterval + separator + gsr.ToString() + separator + temperature + separator +
-                accelerometer.X + separator + accelerometer.Y + separator + accelerometer.Z + separator +
-                gyroscopeAngVel.X + separator + gyroscopeAngVel.Y + separator + gyroscopeAngVel.Z + separator +
-                contact;
+            return Helpers.Helper.GetFieldsAsHeaders(typeof(SensorData), separator, "", this);
         }
 
         /// <summary>

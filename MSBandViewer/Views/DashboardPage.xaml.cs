@@ -2,6 +2,7 @@
 using Microsoft.Band.Sensors;
 using Niuware.MSBandViewer.Helpers;
 using Niuware.MSBandViewer.MSBand;
+using Niuware.MSBandViewer.DataModels;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -493,48 +494,22 @@ namespace Niuware.MSBandViewer.Views
                 msBandRecordTextBlock.Visibility = Visibility.Collapsed;
                 msBandRecordTextBlockStoryboard.Stop();
             });
-            
+
 
             band.UnsuscribeSensors(true, true);
 
-            // Load the export path
-            StorageFolder storageFolder;
-
-            if (settings.Data.sessionDataPathToken != "")
+            SessionExport se = new SessionExport()
             {
-                storageFolder =
-                    await Windows.Storage.AccessCache.StorageApplicationPermissions.FutureAccessList.GetFolderAsync(settings.Data.sessionDataPathToken);
+                Data = band.SessionData
+            };
+
+            if (await se.ExportFile())
+            {
+                SetSyncMessage("Session data saved succesfully.", false);
             }
             else
             {
-                storageFolder = await StorageFolder.GetFolderFromPathAsync(settings.Data.sessionDataPath);
-            }
-
-            try
-            {
-                StorageFile sessionFile = 
-                    await storageFolder.CreateFileAsync("msbv-session-data" + DateTime.Now.ToString("ddMMyy-HHmm") + 
-                                                            ".csv", CreationCollisionOption.GenerateUniqueName);
-
-                string sp = settings.GetStringFileSeparator();  // Separator for each column
-
-                // TODO: Add summary headers like average values, total duration, etc.
-
-                // Headers for the file
-                await FileIO.AppendTextAsync(sessionFile, 
-                    "TIMESTAMP" + sp + " HR" + sp + " RR" + sp + " GSR" + sp + " TEMP" + sp + " ACCEL X" + sp +
-                    " ACCEL Y" + sp + " ACCEL Z" + sp + " GYRO X" + sp + " GYRO Y" + sp + " GYRO Z" + sp + " CONTACT" + "\n");
-
-                foreach (KeyValuePair<DateTime, SensorData> kvp in band.SessionData)
-                {
-                    await FileIO.AppendTextAsync(sessionFile, kvp.Key.ToString("HH:mm:ss") + sp + kvp.Value.Output(sp) + "\n");
-                }
-
-                SetSyncMessage("Session data saved succesfully.", false);
-            }
-            catch(Exception ex)
-            {
-                SetSyncMessage("Unable to save the session data. " + ex.Message, false);
+                SetSyncMessage("Unable to save the session data.", false);
             }
 
             band.ClearSession();
