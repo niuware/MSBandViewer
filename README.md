@@ -1,12 +1,12 @@
 MSBandViewer
 ======
-**MSBandViewer** is used for tracking the sensors of a Microsoft Band such as the Heart Rate sensor, RR Interval, Skin Temperature, etc. and then create/export into a session file.
+**MSBandViewer** is an application used for tracking the sensors of a Microsoft Band such as the Heart Rate sensor, RR Interval Sensor, Skin Temperature, etc. so you can then create/export a single file and analize the session data.
 
-The application is currently a Universal Windows Platform App, but could be easily ported to a WPF application.
+The application is currently a Universal Windows Platform App, but can be easily ported to a WPF application.
 
 ## Installation
 
-After pulling down the repository, open the Visual Studio solution, then got to the Package Manager Console and install the following NuGet packages:
+After pulling down the repository, open the Visual Studio solution, then go to the Package Manager Console and install the following NuGet packages:
 
 ```PM> Install-Package Microsoft.NETCore.UniversalWindowsPlatform```
 
