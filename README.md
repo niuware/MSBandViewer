@@ -4,7 +4,7 @@ MSBandViewer
 
 **MSBandViewer** is a Universal Windows Platform application used for tracking the sensors of a Microsoft Band such as the Heart Rate sensor, RR Interval Sensor, Skin Temperature, etc. so you can then create and export a single file for analyzing the session data. 
 
-This application uses our custom LineGraphCanvas control for drawing time progressive Line Graphs. You can also [check the GIT repository](https://github.com/niuware/LineGraphCanvas) for this custom control.
+This application uses the custom **LineGraphCanvas** control for drawing time progressive Line Graphs. You can also [check the GIT repository](https://github.com/niuware/LineGraphCanvas) for this custom control.
 
 ## Requirements
 
