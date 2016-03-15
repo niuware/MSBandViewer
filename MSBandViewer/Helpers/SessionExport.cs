@@ -35,7 +35,7 @@ namespace Niuware.MSBandViewer.Helpers
 
                 foreach (KeyValuePair<DateTime, SensorData> kvp in Data)
                 {
-                    await FileIO.AppendTextAsync(sessionFile, kvp.Key.ToString("HH:mm:ss") + sp + kvp.Value.Output(sp) + "\n");
+                    await FileIO.AppendTextAsync(sessionFile, kvp.Key.ToString("HH:mm:ss:fff") + sp + kvp.Value.Output(sp) + "\n");
                 }
 
                 return true;
@@ -99,11 +99,14 @@ namespace Niuware.MSBandViewer.Helpers
         private string GetDurationHeader()
         {
             // Session duration
-            TimeSpan duration = new TimeSpan(0, 0, 0, 0, Data.Count * (int)settings.Data.sessionTrackInterval).Duration();
+            TimeSpan duration = TimeSpan.FromMilliseconds((int)settings.Data.sessionTrackInterval);
+
+            duration = TimeSpan.FromTicks((long)duration.Ticks * Data.Count);
 
             string durationStr = (duration.TotalSeconds > 60.0) ? duration.TotalMinutes.ToString() + "min" : duration.TotalSeconds.ToString() + "s";
 
-            return "TOTAL" + sp + "DURATION" + sp + durationStr;
+            return "TOTAL" + sp + "DURATION" + sp + durationStr + sp + "INTERVAL" + sp +
+                settings.Data.sessionTrackInterval + "ms" + sp + "TOTAL" + sp + "VALUES" + sp + Data.Count;
         }
 
         /// <summary>

@@ -153,7 +153,7 @@ namespace Niuware.MSBandViewer.MSBand
         private void sessionTrackIntervalTimer_Callback(object state)
         {
             DateTime currentTime =
-                new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute, DateTime.Now.Second);
+                new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute, DateTime.Now.Second, DateTime.Now.Millisecond);
 
             if (!sessionData.ContainsKey(currentTime))
             {
