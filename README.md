@@ -23,7 +23,7 @@ For details on the Microsoft Band SDK please refer to https://developer.microsof
 
 ## Author
 
-This application was coded entirely by Erik Lopez.
+This application was coded by Erik Lopez.
 
 ## License
 
